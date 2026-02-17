@@ -1,11 +1,24 @@
 // config.js - API Configuration and Helper Functions
-// This file handles all API calls to the PHP backend
+// Works with both Vercel serverless functions and PHP backend
 
-// Get the base URL for API (calls api.php directly)
+// Detect API base URL automatically
 const getAPIBase = () => {
+    const origin = window.location.origin;
+
+    // Vercel deployment: use /api route
+    if (origin.includes('vercel.app') || origin.includes('vercel')) {
+        return origin + '/api';
+    }
+
+    // Local development with Vercel CLI (npx vercel dev)
+    if (origin.includes('localhost:3000')) {
+        return origin + '/api';
+    }
+
+    // Fallback: cPanel / traditional hosting (uses api.php)
     const path = window.location.pathname;
     const directory = path.substring(0, path.lastIndexOf('/'));
-    return window.location.origin + directory + '/api.php';
+    return origin + directory + '/api.php';
 };
 
 const API_BASE = getAPIBase();
@@ -25,14 +38,13 @@ const API = {
         }
 
         try {
-            // Call api.php with endpoint as query parameter
             const url = `${API_BASE}?endpoint=${endpoint}`;
             const response = await fetch(url, options);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const result = await response.json();
             return result;
         } catch (error) {
@@ -127,7 +139,6 @@ const API = {
 
 // Helper Functions
 const APIHelper = {
-    // Format date to readable format
     formatDate: function(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -139,28 +150,23 @@ const APIHelper = {
         });
     },
 
-    // Format currency
     formatCurrency: function(amount) {
         return '$' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     },
 
-    // Generate unique ID
     generateId: function() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
 
-    // Get current date-time
     getCurrentDateTime: function() {
         return new Date().toISOString();
     },
 
-    // Validate email
     isValidEmail: function(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
     },
 
-    // Validate phone
     isValidPhone: function(phone) {
         const re = /^\+?[\d\s\-()]{10,}$/;
         return re.test(phone);
