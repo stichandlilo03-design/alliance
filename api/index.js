@@ -1,34 +1,50 @@
+const { Redis } = require('@upstash/redis');
 const fs = require('fs');
 const path = require('path');
 
-// ─── Storage Layer (uses /tmp for Vercel serverless) ───
-const DATA_DIR = '/tmp';
+// ─── Persistent Storage via Upstash Redis ───
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
+
+// Seed data directory (for initial load)
 const SEED_DIR = path.join(__dirname, '..', 'data');
 
-function readJSON(filename) {
-  const tmpPath = path.join(DATA_DIR, filename);
-  // If already copied to /tmp, read from there
-  if (fs.existsSync(tmpPath)) {
-    try {
-      return JSON.parse(fs.readFileSync(tmpPath, 'utf8'));
-    } catch { return []; }
-  }
-  // First run: copy seed data to /tmp
-  const seedPath = path.join(SEED_DIR, filename);
-  if (fs.existsSync(seedPath)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
-      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+async function readJSON(key) {
+  try {
+    const data = await redis.get(key);
+    if (data !== null && data !== undefined) {
+      // @upstash/redis auto-parses JSON, so data may already be an object
+      if (typeof data === 'string') {
+        return JSON.parse(data);
+      }
       return data;
-    } catch { return []; }
+    }
+
+    // Key doesn't exist yet — load seed data
+    const seedFile = path.join(SEED_DIR, key);
+    if (fs.existsSync(seedFile)) {
+      const seedData = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
+      await redis.set(key, JSON.stringify(seedData));
+      return seedData;
+    }
+
+    // No seed data either — start empty
+    await redis.set(key, '[]');
+    return [];
+  } catch (err) {
+    console.error(`readJSON error for ${key}:`, err);
+    return [];
   }
-  // No seed data, start fresh
-  fs.writeFileSync(tmpPath, '[]');
-  return [];
 }
 
-function writeJSON(filename, data) {
-  fs.writeFileSync(path.join(DATA_DIR, filename), JSON.stringify(data, null, 2));
+async function writeJSON(key, data) {
+  try {
+    await redis.set(key, JSON.stringify(data));
+  } catch (err) {
+    console.error(`writeJSON error for ${key}:`, err);
+  }
 }
 
 // ─── Response Helpers ───
@@ -42,7 +58,6 @@ function setCORS(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-// ─── Generate unique ID ───
 function uniqid() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
 }
@@ -61,7 +76,6 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASS || 'admin123';
 module.exports = async function handler(req, res) {
   setCORS(res);
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -79,7 +93,7 @@ module.exports = async function handler(req, res) {
       case 'login': {
         if (method !== 'POST') return sendJSON(res, false, null, 'Method not allowed', 405);
         const { username, password } = body;
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
 
         const user = users.find(
           u => (u.username === username || u.email === username) && u.password === password
@@ -96,9 +110,8 @@ module.exports = async function handler(req, res) {
       // ──────────────── REGISTER ────────────────
       case 'register': {
         if (method !== 'POST') return sendJSON(res, false, null, 'Method not allowed', 405);
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
 
-        // Check duplicates
         if (users.find(u => u.username === body.username)) {
           return sendJSON(res, false, null, 'Username already exists');
         }
@@ -136,7 +149,7 @@ module.exports = async function handler(req, res) {
         };
 
         users.push(newUser);
-        writeJSON('users.json', users);
+        await writeJSON('users.json', users);
 
         const safeUser = { ...newUser };
         delete safeUser.password;
@@ -148,7 +161,7 @@ module.exports = async function handler(req, res) {
         const username = pathParts[1];
         if (!username) return sendJSON(res, false, null, 'Username required');
 
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
 
         if (method === 'GET') {
           const user = users.find(u => u.username === username);
@@ -162,7 +175,7 @@ module.exports = async function handler(req, res) {
           const idx = users.findIndex(u => u.username === username);
           if (idx === -1) return sendJSON(res, false, null, 'User not found');
           users[idx] = { ...users[idx], ...body };
-          writeJSON('users.json', users);
+          await writeJSON('users.json', users);
           const safeUser = { ...users[idx] };
           delete safeUser.password;
           return sendJSON(res, true, { user: safeUser });
@@ -172,7 +185,7 @@ module.exports = async function handler(req, res) {
           const idx = users.findIndex(u => u.username === username);
           if (idx === -1) return sendJSON(res, false, null, 'User not found');
           users.splice(idx, 1);
-          writeJSON('users.json', users);
+          await writeJSON('users.json', users);
           return sendJSON(res, true, { message: 'User deleted' });
         }
 
@@ -182,7 +195,7 @@ module.exports = async function handler(req, res) {
       // ──────────────── USERS (list all - admin) ────────────────
       case 'users': {
         if (method !== 'GET') return sendJSON(res, false, null, 'Method not allowed', 405);
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
         const safeUsers = users.map(u => {
           const copy = { ...u };
           delete copy.password;
@@ -209,7 +222,7 @@ module.exports = async function handler(req, res) {
         const username = pathParts[1];
         if (!username) return sendJSON(res, false, null, 'Username required');
 
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
         const idx = users.findIndex(u => u.username === username);
         if (idx === -1) return sendJSON(res, false, null, 'User not found');
 
@@ -217,7 +230,7 @@ module.exports = async function handler(req, res) {
 
         const transaction = { ...body, id: uniqid(), date: now() };
         users[idx].transactions.push(transaction);
-        writeJSON('users.json', users);
+        await writeJSON('users.json', users);
         return sendJSON(res, true, { transaction });
       }
 
@@ -227,7 +240,7 @@ module.exports = async function handler(req, res) {
         const username = pathParts[1];
         if (!username) return sendJSON(res, false, null, 'Username required');
 
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
         const user = users.find(u => u.username === username);
         if (!user) return sendJSON(res, false, null, 'User not found');
         return sendJSON(res, true, { transactions: user.transactions || [] });
@@ -239,7 +252,7 @@ module.exports = async function handler(req, res) {
         const username = pathParts[1];
         if (!username) return sendJSON(res, false, null, 'Username required');
 
-        const users = readJSON('users.json');
+        const users = await readJSON('users.json');
         const idx = users.findIndex(u => u.username === username);
         if (idx === -1) return sendJSON(res, false, null, 'User not found');
 
@@ -247,13 +260,13 @@ module.exports = async function handler(req, res) {
         if (body.checkingBalance != null) users[idx].checkingBalance = parseFloat(body.checkingBalance);
         if (body.savingsBalance != null) users[idx].savingsBalance = parseFloat(body.savingsBalance);
 
-        writeJSON('users.json', users);
+        await writeJSON('users.json', users);
         return sendJSON(res, true, { balance: users[idx].balance });
       }
 
       // ──────────────── MONEYFLOW (CRUD) ────────────────
       case 'moneyflow': {
-        const flows = readJSON('moneyflow.json');
+        const flows = await readJSON('moneyflow.json');
 
         if (method === 'GET') {
           return sendJSON(res, true, { flows });
@@ -262,7 +275,7 @@ module.exports = async function handler(req, res) {
         if (method === 'POST') {
           const newFlow = { ...body, id: uniqid(), createdAt: now() };
           flows.push(newFlow);
-          writeJSON('moneyflow.json', flows);
+          await writeJSON('moneyflow.json', flows);
           return sendJSON(res, true, { flow: newFlow });
         }
 
@@ -270,7 +283,7 @@ module.exports = async function handler(req, res) {
           const idx = flows.findIndex(f => f.id === pathParts[1]);
           if (idx === -1) return sendJSON(res, false, null, 'Flow not found');
           flows[idx].status = body.status;
-          writeJSON('moneyflow.json', flows);
+          await writeJSON('moneyflow.json', flows);
           return sendJSON(res, true, { flow: flows[idx] });
         }
 
@@ -278,7 +291,7 @@ module.exports = async function handler(req, res) {
           const idx = flows.findIndex(f => f.id === pathParts[1]);
           if (idx === -1) return sendJSON(res, false, null, 'Flow not found');
           flows.splice(idx, 1);
-          writeJSON('moneyflow.json', flows);
+          await writeJSON('moneyflow.json', flows);
           return sendJSON(res, true, { message: 'Flow deleted' });
         }
 
@@ -287,7 +300,7 @@ module.exports = async function handler(req, res) {
 
       // ──────────────── CHECK DEPOSIT (CRUD) ────────────────
       case 'checkdeposit': {
-        const checks = readJSON('checkdeposits.json');
+        const checks = await readJSON('checkdeposits.json');
 
         if (method === 'GET') {
           return sendJSON(res, true, { checks });
@@ -296,7 +309,7 @@ module.exports = async function handler(req, res) {
         if (method === 'POST') {
           const newCheck = { ...body, id: uniqid(), createdAt: now() };
           checks.push(newCheck);
-          writeJSON('checkdeposits.json', checks);
+          await writeJSON('checkdeposits.json', checks);
           return sendJSON(res, true, { check: newCheck });
         }
 
@@ -304,7 +317,7 @@ module.exports = async function handler(req, res) {
           const idx = checks.findIndex(c => c.id === pathParts[1]);
           if (idx === -1) return sendJSON(res, false, null, 'Check not found');
           checks[idx].status = body.status;
-          writeJSON('checkdeposits.json', checks);
+          await writeJSON('checkdeposits.json', checks);
           return sendJSON(res, true, { check: checks[idx] });
         }
 
@@ -312,7 +325,7 @@ module.exports = async function handler(req, res) {
           const idx = checks.findIndex(c => c.id === pathParts[1]);
           if (idx === -1) return sendJSON(res, false, null, 'Check not found');
           checks.splice(idx, 1);
-          writeJSON('checkdeposits.json', checks);
+          await writeJSON('checkdeposits.json', checks);
           return sendJSON(res, true, { message: 'Check deleted' });
         }
 
