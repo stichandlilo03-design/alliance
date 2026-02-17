@@ -2,5 +2,8 @@
   "name": "alliance-fcu",
   "version": "1.0.0",
   "private": true,
-  "description": "Alliance FCU Banking Prototype"
+  "description": "Alliance FCU Banking Prototype",
+  "dependencies": {
+    "@upstash/redis": "^1.34.3"
+  }
 }
