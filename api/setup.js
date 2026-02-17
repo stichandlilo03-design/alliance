@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
         marketing BOOLEAN DEFAULT false,
         status TEXT DEFAULT 'active',
         tax_code TEXT DEFAULT '',
+        status_reason TEXT DEFAULT '',
         created_at TEXT DEFAULT ''
       );
     `);
