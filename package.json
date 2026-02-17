@@ -4,6 +4,6 @@
   "private": true,
   "description": "Alliance FCU Banking Prototype",
   "dependencies": {
-    "@vercel/postgres": "^0.10.0"
+    "pg": "^8.13.1"
   }
 }
