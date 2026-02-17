@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locations & Hours - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: #003d7a;
+            color: white;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .top-bar .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .top-bar a:hover {
+            text-decoration: underline;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #0066cc;
+        }
+
+        .login-btn {
+            background: #0066cc;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .login-btn:hover {
+            background: #0052a3;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #003d7a 0%, #0066cc 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+        }
+
+        /* Search Section */
+        .search-section {
+            max-width: 800px;
+            margin: -40px auto 60px;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-section h2 {
+            color: #003d7a;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .search-btn {
+            background: #0066cc;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #0052a3;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+
+        /* Results Section */
+        .results-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .results-header {
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .location-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .location-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        .location-card h3 {
+            color: #003d7a;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .location-info {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .location-info strong {
+            color: #333;
+        }
+
+        .hours {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .hours h4 {
+            color: #003d7a;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .directions-btn {
+            display: inline-block;
+            margin-top: 15px;
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .directions-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 40px 20px;
+            margin-top: 60px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 15px;
+            color: #0066cc;
+        }
+
+        .footer-section a {
+            display: block;
+            color: #ccc;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div>ROUTING# 123456789 | 1-800-BANK-HELP</div>
+            <div>
+                <a href="#locations">Locations</a>
+                <a href="#rates">Rates</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo">Alliance FCU</div>
+            <nav>
+                <a href="#bank">Bank</a>
+                <a href="#borrow">Borrow</a>
+                <a href="#save">Save</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <a href="#" class="login-btn" onclick="goToLogin(event)">Login</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>Locations & Hours</h1>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <h2>Find a Branch or ATM Near You</h2>
+        <p style="color: #666; margin-bottom: 20px;">Enter an address, zip code, or city and state to begin your search.</p>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Enter address, zip code, or city..." id="searchInput">
+            <button class="search-btn" onclick="searchLocations()">Search</button>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Proximity:</label>
+                <select id="proximityFilter">
+                    <option>Within 5 miles</option>
+                    <option selected>Within 10 miles</option>
+                    <option>Within 25 miles</option>
+                    <option>Within 50 miles</option>
+                    <option>Within 100 miles</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab active" onclick="filterType('branches')">Branches</button>
+            <button class="tab" onclick="filterType('atms')">ATMs</button>
+            <button class="tab" onclick="filterType('all')">Show All</button>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="results-header">
+            <h2 id="resultsTitle">All Branches</h2>
+            <p id="resultsCount">Showing 3 locations</p>
+        </div>
+
+        <div class="location-grid" id="locationGrid">
+            <!-- Location Card 1 -->
+            <div class="location-card" data-type="branch">
+                <h3>Downtown Branch</h3>
+                <div class="location-info">
+                    <strong>Address:</strong><br>
+                    123 Main Street<br>
+                    Suite 100<br>
+                    Your City, ST 12345
+                </div>
+                <div class="location-info">
+                    <strong>Phone:</strong> (555) 123-4567
+                </div>
+                <div class="hours">
+                    <h4>Hours:</h4>
+                    <strong>Lobby Hours:</strong><br>
+                    Mon-Fri: 9:00 AM - 5:00 PM<br>
+                    Sat: 9:00 AM - 1:00 PM<br>
+                    Sun: Closed<br><br>
+                    <strong>Drive-Thru Hours:</strong><br>
+                    Mon-Fri: 8:00 AM - 6:00 PM<br>
+                    Sat: 9:00 AM - 2:00 PM
+                </div>
+                <a href="#" class="directions-btn">Get Directions →</a>
+            </div>
+
+            <!-- Location Card 2 -->
+            <div class="location-card" data-type="branch">
+                <h3>Westside Branch</h3>
+                <div class="location-info">
+                    <strong>Address:</strong><br>
+                    456 Oak Avenue<br>
+                    Your City, ST 12346
+                </div>
+                <div class="location-info">
+                    <strong>Phone:</strong> (555) 234-5678
+                </div>
+                <div class="hours">
+                    <h4>Hours:</h4>
+                    <strong>Lobby Hours:</strong><br>
+                    Mon-Fri: 9:00 AM - 5:00 PM<br>
+                    Sat: 9:00 AM - 12:00 PM<br>
+                    Sun: Closed<br><br>
+                    <strong>Drive-Thru Hours:</strong><br>
+                    Mon-Fri: 8:00 AM - 6:00 PM<br>
+                    Sat: 9:00 AM - 1:00 PM
+                </div>
+                <a href="#" class="directions-btn">Get Directions →</a>
+            </div>
+
+            <!-- Location Card 3 -->
+            <div class="location-card" data-type="branch">
+                <h3>Northgate Branch</h3>
+                <div class="location-info">
+                    <strong>Address:</strong><br>
+                    789 Pine Road<br>
+                    Your City, ST 12347
+                </div>
+                <div class="location-info">
+                    <strong>Phone:</strong> (555) 345-6789
+                </div>
+                <div class="hours">
+                    <h4>Hours:</h4>
+                    <strong>Lobby Hours:</strong><br>
+                    Mon-Thu: 9:00 AM - 5:00 PM<br>
+                    Fri: 9:00 AM - 6:00 PM<br>
+                    Sat: 9:00 AM - 1:00 PM<br>
+                    Sun: Closed
+                </div>
+                <a href="#" class="directions-btn">Get Directions →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>Bank</h4>
+                <a href="#checking">Checking Accounts</a>
+                <a href="#savings">Savings Accounts</a>
+                <a href="#online">Online Banking</a>
+                <a href="#mobile">Mobile Banking</a>
+            </div>
+            <div class="footer-section">
+                <h4>Borrow</h4>
+                <a href="#mortgages">Mortgages</a>
+                <a href="#auto">Auto Loans</a>
+                <a href="#personal">Personal Loans</a>
+                <a href="#credit">Credit Cards</a>
+            </div>
+            <div class="footer-section">
+                <h4>About</h4>
+                <a href="#story">Our Story</a>
+                <a href="#careers">Careers</a>
+                <a href="#news">News & Awards</a>
+                <a href="#contact">Contact Us</a>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <a href="#rates">Rates</a>
+                <a href="#calculators">Calculators</a>
+                <a href="#education">Financial Education</a>
+                <a href="#security">Security Tips</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Alliance FCU. Member FDIC. Equal Housing Lender.</p>
+            <p>NMLS# 123456 | Routing# 123456789</p>
+            <p style="margin-top: 10px;"><a href="admin-login.html" style="color: #999; text-decoration: none; font-size: 12px;">Admin Access</a></p>
+        </div>
+    </footer>
+
+    <script>
+        function searchLocations() {
+            const input = document.getElementById('searchInput').value;
+            if (input.trim() === '') {
+                alert('Please enter a location to search');
+                return;
+            }
+            document.getElementById('resultsTitle').textContent = `Search results for "${input}"`;
+        }
+
+        function filterType(type) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.location-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                if (type === 'all' || card.dataset.type === type) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const typeText = type === 'all' ? 'All Locations' : type === 'branches' ? 'Branches' : 'ATMs';
+            document.getElementById('resultsTitle').textContent = typeText;
+            document.getElementById('resultsCount').textContent = `Showing ${visibleCount} location${visibleCount !== 1 ? 's' : ''}`;
+        }
+
+        function goToLogin(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

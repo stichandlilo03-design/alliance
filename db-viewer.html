@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Viewer - FirstBank</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #003d7a; }
+        button { background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px 5px; }
+        button:hover { background: #0052a3; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 5px; overflow-x: auto; font-size: 14px; }
+        .info { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: 600; border: 1px solid #ddd; }
+        td { padding: 12px; border: 1px solid #ddd; }
+        .badge { background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <div class="container">
+        <h1>🔍 FirstBank Database Viewer</h1>
+        <p>View all data stored in your database</p>
+
+        <div>
+            <button onclick="viewUsers()">View All Users</button>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="clearDisplay()">Clear Display</button>
+        </div>
+
+        <div id="display"></div>
+    </div>
+
+    <script>
+        function clearDisplay() {
+            document.getElementById('display').innerHTML = '';
+        }
+
+        async function viewUsers() {
+            clearDisplay();
+            const display = document.getElementById('display');
+            
+            display.innerHTML = '<div class="info">Loading users from database...</div>';
+            
+            try {
+                const result = await API.getUsers();
+                
+                if (result.success) {
+                    const users = result.data.users || [];
+                    
+                    let html = '<div class="info"><strong>✅ Success!</strong> Found ' + users.length + ' users</div>';
+                    
+                    if (users.length > 0) {
+                        html += '<h3>User Summary:</h3>';
+                        html += '<table><tr><th>#</th><th>Username</th><th>Email</th><th>Password (for testing)</th><th>Balance</th><th>Status</th></tr>';
+                        
+                        users.forEach((user, index) => {
+                            html += '<tr>';
+                            html += '<td>' + (index + 1) + '</td>';
+                            html += '<td><strong>' + user.username + '</strong></td>';
+                            html += '<td>' + user.email + '</td>';
+                            html += '<td><code>' + (user.password || 'N/A') + '</code></td>';
+                            html += '<td>$' + (user.balance || 0).toFixed(2) + '</td>';
+                            html += '<td><span class="badge">' + (user.status || 'active') + '</span></td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</table>';
+                        
+                        html += '<h3>Full Database (JSON):</h3>';
+                        html += '<pre>' + JSON.stringify(users, null, 2) + '</pre>';
+                    } else {
+                        html += '<div class="warning">⚠️ No users found in database. Create an account first!</div>';
+                    }
+                    
+                    display.innerHTML = html;
+                } else {
+                    display.innerHTML = '<div class="warning">❌ Error: ' + (result.error || 'Could not load users') + '</div>';
+                }
+            } catch (error) {
+                display.innerHTML = '<div class="warning">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function testLogin() {
+            const username = prompt('Enter username or email to test:');
+            const password = prompt('Enter password to test:');
+            
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+            
+            clearDisplay();
+            const display = document.getElementById('display');
+            
+            display.innerHTML = '<div class="info">Testing login for: <strong>' + username + '</strong></div>';
+            
+            try {
+                const result = await API.login(username, password);
+                
+                if (result.success) {
+                    let html = '<div class="info"><strong>✅ Login Successful!</strong></div>';
+                    html += '<h3>User Data:</h3>';
+                    html += '<pre>' + JSON.stringify(result.data.user, null, 2) + '</pre>';
+                    display.innerHTML = html;
+                } else {
+                    let html = '<div class="warning"><strong>❌ Login Failed</strong><br>';
+                    html += 'Error: ' + (result.error || 'Unknown error') + '</div>';
+                    html += '<h3>Possible Issues:</h3>';
+                    html += '<ul>';
+                    html += '<li>Username/Email does not match exactly (case-sensitive)</li>';
+                    html += '<li>Password does not match exactly</li>';
+                    html += '<li>User does not exist in database</li>';
+                    html += '</ul>';
+                    html += '<p><strong>Tip:</strong> Click "View All Users" to see what\'s in the database</p>';
+                    display.innerHTML = html;
+                }
+            } catch (error) {
+                display.innerHTML = '<div class="warning">❌ Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-load users on page load
+        window.onload = function() {
+            viewUsers();
+        };
+    </script>
+</body>
+</html>

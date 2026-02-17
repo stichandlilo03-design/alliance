@@ -1,0 +1,76 @@
+[
+    {
+        "id": "69365c10b328a",
+        "username": "stevenkilan154",
+        "password": "Goodlife8179@",
+        "email": "stevenkila@gmail.com",
+        "fullname": "steven kilan",
+        "firstName": "steven",
+        "lastName": "kilan",
+        "phone": "8036301295",
+        "dob": "1990-10-12",
+        "address": "27 1231 The Bronx",
+        "city": "Bronx County",
+        "state": "NY",
+        "zip": "10456",
+        "country": "USA",
+        "ssn": "4478",
+        "accountType": "both",
+        "accountNumber": "****4007",
+        "routingNumber": "021000021",
+        "balance": 45000000,
+        "checkingBalance": 0,
+        "savingsBalance": 0,
+        "transactions": [
+            {
+                "id": "693660676f618",
+                "type": "deposit",
+                "amount": 45000000,
+                "description": "Mobile Deposit #728372892",
+                "date": "2025-12-08 13:21:43",
+                "status": "approved"
+            }
+        ],
+        "marketing": true,
+        "status": "active",
+        "taxCode": "",
+        "createdAt": "2025-12-08 13:03:12"
+    },
+    {
+        "id": "6936cbd3ee503",
+        "username": "ghchinter0011",
+        "password": "Elephant01$",
+        "email": "ghchinter@gmail.com",
+        "fullname": "Charles  Hintermeister",
+        "firstName": "Charles ",
+        "lastName": "Hintermeister",
+        "phone": "9736199491",
+        "dob": "1955-12-04",
+        "address": "37 no way",
+        "city": "North berwick",
+        "state": "ME",
+        "zip": "03906",
+        "country": "USA",
+        "ssn": "1070",
+        "accountType": "checking",
+        "accountNumber": "****2739",
+        "routingNumber": "021000021",
+        "balance": 52000000,
+        "checkingBalance": 0,
+        "savingsBalance": 0,
+        "transactions": [
+            {
+                "id": "6936cca4dc369",
+                "type": "deposit",
+                "amount": 52000000,
+                "description": "Mobile Deposit #728372892",
+                "date": "2025-12-08 21:03:32",
+                "status": "approved"
+            }
+        ],
+        "marketing": true,
+        "status": "active",
+        "taxCode": "",
+        "createdAt": "2025-12-08 21:00:03"
+    }
+]

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003d7a 0%, #0066cc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            cursor: pointer;
+        }
+
+        .back-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Main Container */
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .signup-wrapper {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .signup-wrapper h2 {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .signup-wrapper > p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ddd;
+            z-index: 0;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #ddd;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .step.active .step-number {
+            background: #0066cc;
+        }
+
+        .step.completed .step-number {
+            background: #28a745;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Form Sections */
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group label .required {
+            color: #dc3545;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .form-group input.error {
+            border-color: #dc3545;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+
+        .strength-fill.weak {
+            width: 33%;
+            background: #dc3545;
+        }
+
+        .strength-fill.medium {
+            width: 66%;
+            background: #ffc107;
+        }
+
+        .strength-fill.strong {
+            width: 100%;
+            background: #28a745;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-top: 4px;
+        }
+
+        .checkbox-group label {
+            font-weight: normal;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .checkbox-group a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        /* Buttons */
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0066cc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .signup-wrapper {
+                padding: 30px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .progress-steps {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo" onclick="window.location.href='index.html'">Alliance FCU</div>
+            <a href="login.html" class="back-link">Already have an account? Login</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="signup-wrapper">
+            <h2>Create Your Account</h2>
+            <p>Join Alliance FCU today and enjoy secure banking</p>
+
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Personal Info</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Account Details</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Security</div>
+                </div>
+            </div>
+
+            <div class="alert" id="alertMessage"></div>
+
+            <form id="signupForm">
+                <!-- Step 1: Personal Information -->
+                <div class="form-section active" id="step1">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" id="firstName" name="firstName" required>
+                            <div class="error-message" id="firstNameError">Please enter your first name</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" id="lastName" name="lastName" required>
+                            <div class="error-message" id="lastNameError">Please enter your last name</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="error-message" id="emailError">Please enter a valid email address</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required>
+                        <div class="error-message" id="phoneError">Please enter a valid phone number</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date of Birth <span class="required">*</span></label>
+                        <input type="date" id="dob" name="dob" required>
+                        <div class="error-message" id="dobError">You must be 18 or older</div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Account Details -->
+                <div class="form-section" id="step2">
+                    <div class="form-group">
+                        <label>Address <span class="required">*</span></label>
+                        <input type="text" id="address" name="address" placeholder="123 Main Street" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City <span class="required">*</span></label>
+                            <input type="text" id="city" name="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State <span class="required">*</span></label>
+                            <select id="state" name="state" required>
+                                <option value="">Select State</option>
+                                <option value="NY">New York</option>
+                                <option value="CA">California</option>
+								<option value="ME">Maine</option>
+                                <option value="TX">Texas</option>
+                                <option value="FL">Florida</option>
+                                <!-- Add more states as needed -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ZIP Code <span class="required">*</span></label>
+                            <input type="text" id="zip" name="zip" placeholder="12345" required>
+                        </div>
+                        <div class="form-group">
+                            <label>SSN (Last 4 digits) <span class="required">*</span></label>
+                            <input type="text" id="ssn" name="ssn" placeholder="1234" maxlength="4" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Account Type <span class="required">*</span></label>
+                        <select id="accountType" name="accountType" required>
+                            <option value="">Select Account Type</option>
+                            <option value="checking">Checking Account</option>
+                            <option value="savings">Savings Account</option>
+                            <option value="both">Both Checking & Savings</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 3: Security -->
+                <div class="form-section" id="step3">
+                    <div class="form-group">
+                        <label>Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" required>
+                        <div class="error-message" id="usernameError">Username must be at least 4 characters</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password <span class="required">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" required>
+                            <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <span id="strengthText"></span>
+                        </div>
+                        <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Confirm Password <span class="required">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <span class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</span>
+                        </div>
+                        <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">
+                            I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="marketing" name="marketing">
+                        <label for="marketing">
+                            Send me promotional emails and updates
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Buttons -->
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">Previous</button>
+                    <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">Next</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">Create Account</button>
+                </div>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p style="color: #003d7a; font-weight: 600;">Creating your account...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2024 Alliance FCU. Member FDIC. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let currentStep = 1;
+
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        // Check password strength
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthFill.className = 'strength-fill';
+            if (strength <= 1) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.style.color = '#dc3545';
+            } else if (strength <= 3) {
+                strengthFill.classList.add('medium');
+                strengthText.textContent = 'Medium password';
+                strengthText.style.color = '#ffc107';
+            } else {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.style.color = '#28a745';
+            }
+        });
+
+        // Change step
+        function changeStep(direction) {
+            if (direction === 1 && !validateStep(currentStep)) {
+                return;
+            }
+            
+            currentStep += direction;
+            
+            // Update step display
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('step' + currentStep).classList.add('active');
+            
+            // Update progress steps
+            document.querySelectorAll('.step').forEach(step => {
+                const stepNum = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+            document.getElementById('nextBtn').style.display = currentStep === 3 ? 'none' : 'block';
+            document.getElementById('submitBtn').style.display = currentStep === 3 ? 'block' : 'none';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Validate current step
+        function validateStep(step) {
+            let isValid = true;
+            
+            if (step === 1) {
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const dob = document.getElementById('dob').value;
+                
+                if (!firstName) {
+                    showError('firstName', 'firstNameError');
+                    isValid = false;
+                }
+                if (!lastName) {
+                    showError('lastName', 'lastNameError');
+                    isValid = false;
+                }
+                if (!email || !email.includes('@')) {
+                    showError('email', 'emailError');
+                    isValid = false;
+                }
+                if (!phone) {
+                    showError('phone', 'phoneError');
+                    isValid = false;
+                }
+                if (!dob || !isOver18(dob)) {
+                    showError('dob', 'dobError');
+                    isValid = false;
+                }
+            } else if (step === 2) {
+                const fields = ['address', 'city', 'state', 'zip', 'ssn', 'accountType'];
+                fields.forEach(field => {
+                    if (!document.getElementById(field).value) {
+                        document.getElementById(field).classList.add('error');
+                        isValid = false;
+                    }
+                });
+            }
+            
+            return isValid;
+        }
+
+        // Check if user is over 18
+        function isOver18(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                return age - 1 >= 18;
+            }
+            return age >= 18;
+        }
+
+        // Show error
+        function showError(fieldId, errorId) {
+            document.getElementById(fieldId).classList.add('error');
+            document.getElementById(errorId).style.display = 'block';
+        }
+
+        // Hide error on input
+        document.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('input', function() {
+                this.classList.remove('error');
+                const errorId = this.id + 'Error';
+                const errorElement = document.getElementById(errorId);
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            });
+        });
+
+        // Handle form submission with API integration
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const terms = document.getElementById('terms').checked;
+            
+            // Validate username
+            if (username.length < 4) {
+                showError('username', 'usernameError');
+                return;
+            }
+            
+            // Validate password
+            if (password.length < 8) {
+                showError('password', 'passwordError');
+                return;
+            }
+            
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                showError('confirmPassword', 'confirmPasswordError');
+                return;
+            }
+            
+            // Check terms
+            if (!terms) {
+                showAlert('Please accept the Terms of Service', 'error');
+                return;
+            }
+            
+            // Generate account numbers
+            const accountNumber = '****' + Math.floor(1000 + Math.random() * 9000);
+            const routingNumber = '021000021'; // Example routing number
+            
+            // Collect all form data
+            const userData = {
+                username: username,
+                password: password,
+                email: document.getElementById('email').value,
+                fullname: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zip: document.getElementById('zip').value,
+                country: 'USA',
+                ssn: document.getElementById('ssn').value,
+                accountType: document.getElementById('accountType').value,
+                accountNumber: accountNumber,
+                routingNumber: routingNumber,
+                balance: 0.00,
+                checkingBalance: 0.00,
+                savingsBalance: 0.00,
+                transactions: [],
+                marketing: document.getElementById('marketing').checked,
+                status: 'active'
+            };
+            
+            // Show loading overlay
+            document.getElementById('loadingOverlay').classList.add('active');
+            
+            try {
+                // Call API to register user
+                const result = await API.register(userData);
+                
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').classList.remove('active');
+                
+                if (result.success) {
+                    showAlert('Account created successfully! Redirecting to login...', 'success');
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    // Show error message
+                    showAlert(result.error || 'Registration failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').classList.remove('active');
+                
+                // Handle network or other errors
+                console.error('Registration error:', error);
+                showAlert('Connection error. Please check your internet connection and try again.', 'error');
+            }
+        });
+
+        // Show alert
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertMessage');
+            alert.textContent = message;
+            alert.className = 'alert ' + type;
+            alert.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (type === 'error') {
+                    alert.style.display = 'none';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

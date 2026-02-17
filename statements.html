@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Statements - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+
+        .statement-selector {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .statements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .statement-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .statement-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .statement-month {
+            font-size: 20px;
+            font-weight: bold;
+            color: #003d7a;
+            margin-bottom: 15px;
+        }
+
+        .statement-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .statement-info strong {
+            color: #333;
+        }
+
+        .download-btn {
+            width: 100%;
+            margin-top: 15px;
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .no-statements {
+            background: white;
+            padding: 60px;
+            border-radius: 10px;
+            text-align: center;
+            color: #999;
+        }
+
+        .no-statements h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo" onclick="window.location.href='dashboard.html'">Alliance FCU</div>
+            <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Account Statements</h1>
+
+        <div class="statement-selector">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Account</label>
+                    <select id="accountSelect">
+                        <option value="all">All Accounts</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <select id="yearSelect"></select>
+                </div>
+                <button class="btn btn-primary" onclick="loadStatements()">View Statements</button>
+            </div>
+        </div>
+
+        <div id="statementsContainer"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        var currentUser = null;
+
+        function initPage() {
+            var userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = JSON.parse(userStr);
+            
+            populateYears();
+            loadStatements();
+        }
+
+        function populateYears() {
+            var yearSelect = document.getElementById('yearSelect');
+            var currentYear = new Date().getFullYear();
+            
+            for (var i = 0; i < 5; i++) {
+                var year = currentYear - i;
+                var option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (i === 0) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function loadStatements() {
+            var account = document.getElementById('accountSelect').value;
+            var year = parseInt(document.getElementById('yearSelect').value);
+            
+            if (!currentUser.transactions || currentUser.transactions.length === 0) {
+                document.getElementById('statementsContainer').innerHTML = '<div class="no-statements"><h3>No Transactions Available</h3><p>You don\'t have any transactions yet. Statements will appear here once you have account activity.</p></div>';
+                return;
+            }
+
+            var groupedByMonth = {};
+            
+            currentUser.transactions.forEach(function(transaction) {
+                var date = new Date(transaction.date);
+                if (date.getFullYear() !== year) return;
+                
+                var monthKey = date.getMonth();
+                var monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                
+                if (!groupedByMonth[monthKey]) {
+                    groupedByMonth[monthKey] = {
+                        name: monthName,
+                        transactions: [],
+                        totalDebits: 0,
+                        totalCredits: 0
+                    };
+                }
+                
+                groupedByMonth[monthKey].transactions.push(transaction);
+                if (transaction.amount > 0) {
+                    groupedByMonth[monthKey].totalCredits += transaction.amount;
+                } else {
+                    groupedByMonth[monthKey].totalDebits += Math.abs(transaction.amount);
+                }
+            });
+
+            var html = '<div class="statements-grid">';
+            var months = Object.keys(groupedByMonth).sort(function(a, b) { return b - a; });
+            
+            if (months.length === 0) {
+                document.getElementById('statementsContainer').innerHTML = '<div class="no-statements"><h3>No Statements for ' + year + '</h3><p>You don\'t have any transactions for this year.</p></div>';
+                return;
+            }
+
+            months.forEach(function(monthKey) {
+                var monthData = groupedByMonth[monthKey];
+                html += '<div class="statement-card">';
+                html += '<div class="statement-month">' + monthData.name + '</div>';
+                html += '<div class="statement-info"><strong>Transactions:</strong> ' + monthData.transactions.length + '</div>';
+                html += '<div class="statement-info"><strong>Credits:</strong> $' + monthData.totalCredits.toFixed(2) + '</div>';
+                html += '<div class="statement-info"><strong>Debits:</strong> $' + monthData.totalDebits.toFixed(2) + '</div>';
+                html += '<button class="download-btn" onclick="downloadStatement(\'' + monthKey + '\', \'' + year + '\')">📄 Download PDF</button>';
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            document.getElementById('statementsContainer').innerHTML = html;
+        }
+
+        function downloadStatement(monthKey, year) {
+            var jsPDF = window.jspdf.jsPDF;
+            var doc = new jsPDF();
+            
+            var monthName = new Date(year, monthKey, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            doc.setFillColor(0, 61, 122);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.text('Alliance FCU', 20, 20);
+            
+            doc.setFontSize(14);
+            doc.text('Account Statement', 20, 30);
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text('Statement Period: ' + monthName, 20, 50);
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('Account Holder Information', 20, 65);
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text('Name: ' + currentUser.firstName + ' ' + currentUser.lastName, 20, 75);
+            doc.text('Account Number: ****' + (currentUser.id ? currentUser.id.slice(-4) : '6789'), 20, 82);
+            doc.text('SSN: ***-**-' + currentUser.ssn, 20, 89);
+            doc.text('Statement Date: ' + new Date().toLocaleDateString(), 20, 96);
+            
+            var monthTransactions = currentUser.transactions.filter(function(t) {
+                var date = new Date(t.date);
+                return date.getMonth() === parseInt(monthKey) && date.getFullYear() === parseInt(year);
+            });
+
+            var startBalance = currentUser.balance || 0;
+            monthTransactions.forEach(function(t) {
+                startBalance -= t.amount;
+            });
+
+            doc.setFont(undefined, 'bold');
+            doc.text('Account Summary', 20, 110);
+            doc.setFont(undefined, 'normal');
+            doc.text('Beginning Balance: $' + startBalance.toFixed(2), 20, 120);
+            
+            var totalCredits = 0;
+            var totalDebits = 0;
+            monthTransactions.forEach(function(t) {
+                if (t.amount > 0) totalCredits += t.amount;
+                else totalDebits += Math.abs(t.amount);
+            });
+            
+            doc.text('Total Credits: $' + totalCredits.toFixed(2), 20, 127);
+            doc.text('Total Debits: $' + totalDebits.toFixed(2), 20, 134);
+            doc.text('Ending Balance: $' + (currentUser.balance || 0).toFixed(2), 20, 141);
+            
+            doc.setFont(undefined, 'bold');
+            doc.text('Transaction History', 20, 155);
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            
+            var y = 165;
+            doc.text('Date', 20, y);
+            doc.text('Description', 50, y);
+            doc.text('Amount', 160, y);
+            
+            doc.line(20, y + 2, 190, y + 2);
+            
+            y += 8;
+            
+            monthTransactions.sort(function(a, b) {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            monthTransactions.forEach(function(transaction) {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                var date = new Date(transaction.date);
+                var dateStr = date.toLocaleDateString();
+                var desc = transaction.description || 'Transaction';
+                if (desc.length > 40) desc = desc.substring(0, 37) + '...';
+                
+                var amount = transaction.amount >= 0 ? '+$' + transaction.amount.toFixed(2) : '-$' + Math.abs(transaction.amount).toFixed(2);
+                var status = transaction.status === 'pending' ? ' (PENDING)' : '';
+                
+                doc.text(dateStr, 20, y);
+                doc.text(desc + status, 50, y);
+                doc.setTextColor(transaction.amount >= 0 ? 0 : 220, transaction.amount >= 0 ? 150 : 0, 0);
+                doc.text(amount, 160, y);
+                doc.setTextColor(0, 0, 0);
+                
+                y += 7;
+            });
+            
+            if (y > 250) {
+                doc.addPage();
+                y = 20;
+            }
+            
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('Alliance FCU - Member FDIC - Equal Housing Lender', 20, 285);
+            doc.text('For questions, call 1-800-BANK-HELP or visit www.Alliance FCU.com', 20, 290);
+            
+            doc.save('Statement_' + monthName.replace(' ', '_') + '.pdf');
+        }
+
+        window.onload = initPage;
+    </script>
+</body>
+</html>

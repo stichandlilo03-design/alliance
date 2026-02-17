@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial; margin: 0; background: #f5f5f5; }
+        .header { background: #333; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat h3 { color: #666; font-size: 14px; margin: 0 0 10px 0; }
+        .stat .val { font-size: 28px; font-weight: bold; color: #0066cc; }
+        .tabs { background: white; padding: 10px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab { padding: 10px 20px; border: none; background: #f0f0f0; margin-right: 10px; cursor: pointer; border-radius: 5px; font-weight: 600; }
+        .tab.active { background: #0066cc; color: white; }
+        .content { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f0f0f0; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; font-weight: 600; }
+        .btn-blue { background: #0066cc; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        .btn-red { background: #dc3545; color: white; }
+        .btn-yellow { background: #ffc107; color: black; }
+        .logout { background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-content h2 { margin-top: 0; color: #003d7a; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-buttons button { flex: 1; padding: 12px; font-size: 16px; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0066cc; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <div class="header">
+        <div><h2 style="margin:0">Admin Dashboard</h2></div>
+        <button class="logout" onclick="doLogout()">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat"><h3>Total Users</h3><div class="val" id="stat1">0</div></div>
+            <div class="stat"><h3>Total Balance</h3><div class="val" id="stat2">$0</div></div>
+            <div class="stat"><h3>Pending Deposits</h3><div class="val" id="stat3">0</div></div>
+            <div class="stat"><h3>Transactions</h3><div class="val" id="stat4">0</div></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="goTab(0)">Users</button>
+            <button class="tab" onclick="goTab(1)">Deposits</button>
+            <button class="tab" onclick="goTab(2)">Transactions</button>
+            <button class="tab" onclick="goTab(3)">Tax Codes</button>
+        </div>
+
+        <div class="section active" id="s0">
+            <div class="content">
+                <h3>All Users</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Balance</th><th>Tax Code</th><th>Actions</th></tr></thead>
+                    <tbody id="usersList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="s1">
+            <div class="content">
+                <h3>Pending Deposits</h3>
+                <div id="depositsList"></div>
+            </div>
+        </div>
+
+        <div class="section" id="s2">
+            <div class="content">
+                <h3>All Transactions</h3>
+                <table>
+                    <thead><tr><th>Date</th><th>User</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
+                    <tbody id="transList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="s3">
+            <div class="content">
+                <h3>Tax Codes</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Tax Code</th><th>Actions</th></tr></thead>
+                    <tbody id="taxList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="s4">
+            <div class="content">
+                <h3 id="histTitle">User History</h3>
+                <button class="btn btn-blue" onclick="goTab(0)">Back to Users</button>
+                <table style="margin-top:15px">
+                    <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
+                    <tbody id="histList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="m1">
+        <div class="modal-content">
+            <h2>Edit User</h2>
+            <form id="f1">
+                <input type="hidden" id="i1">
+                <input type="hidden" id="i1b">
+                <div class="form-group"><label>First Name</label><input type="text" id="i2" required></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="i3" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="i4" required></div>
+                <div class="form-group"><label>Balance ($)</label><input type="number" id="i5" step="0.01" required></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-red" onclick="hideM()">Cancel</button>
+                    <button type="submit" class="btn btn-green">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="m2">
+        <div class="modal-content">
+            <h2>Add Transaction</h2>
+            <form id="f2">
+                <input type="hidden" id="i6">
+                <input type="hidden" id="i6b">
+                <div class="form-group"><label>Type</label><select id="i7" required><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option><option value="payment">Payment</option></select></div>
+                <div class="form-group"><label>Amount ($)</label><input type="number" id="i8" step="0.01" required></div>
+                <div class="form-group"><label>Description</label><input type="text" id="i9" required></div>
+                <div class="form-group"><label>Date</label><input type="datetime-local" id="i10" required></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-red" onclick="hideM()">Cancel</button>
+                    <button type="submit" class="btn btn-green">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="m3">
+        <div class="modal-content">
+            <h2>Edit Tax Code</h2>
+            <form id="f3">
+                <input type="hidden" id="i11">
+                <input type="hidden" id="i11b">
+                <div class="form-group"><label>User</label><input type="text" id="i12" disabled></div>
+                <div class="form-group"><label>Tax Code</label><input type="text" id="i13" required></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-red" onclick="hideM()">Cancel</button>
+                    <button type="submit" class="btn btn-green">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="m4">
+        <div class="modal-content">
+            <h2>Edit Transaction</h2>
+            <form id="f4">
+                <input type="hidden" id="i14">
+                <input type="hidden" id="i14b">
+                <input type="hidden" id="i15">
+                <div class="form-group"><label>Type</label><select id="i16" required><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option><option value="transfer">Transfer</option><option value="payment">Payment</option></select></div>
+                <div class="form-group"><label>Amount ($)</label><input type="number" id="i17" step="0.01" required></div>
+                <div class="form-group"><label>Description</label><input type="text" id="i18" required></div>
+                <div class="form-group"><label>Date</label><input type="datetime-local" id="i19" required></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-red" onclick="hideM()">Cancel</button>
+                    <button type="submit" class="btn btn-green">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var currentHist = null;
+        var allUsers = [];
+
+        function fmt(n) {
+            return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function doLogout() {
+            localStorage.removeItem('adminLoggedIn');
+            window.location.href = 'admin-login.html';
+        }
+
+        function goTab(n) {
+            var ts = document.querySelectorAll('.tab');
+            var ss = document.querySelectorAll('.section');
+            for (var i = 0; i < ts.length; i++) ts[i].classList.remove('active');
+            for (var i = 0; i < ss.length; i++) ss[i].classList.remove('active');
+            if (ts[n]) ts[n].classList.add('active');
+            ss[n].classList.add('active');
+        }
+
+        async function load() {
+            // Show loading
+            document.getElementById('usersList').innerHTML = '<tr><td colspan="5"><div class="loading"><div class="spinner"></div><p>Loading users...</p></div></td></tr>';
+            
+            try {
+                // Fetch users from API
+                var result = await API.getUsers();
+                
+                if (!result.success) {
+                    alert('Error loading users: ' + (result.error || 'Unknown error'));
+                    return;
+                }
+                
+                var u = result.data.users || [];
+                allUsers = u; // Store globally
+                
+                document.getElementById('stat1').textContent = u.length;
+                var tot = 0, pend = 0, tc = 0;
+                for (var i = 0; i < u.length; i++) {
+                    tot += u[i].balance || 0;
+                    if (u[i].transactions) {
+                        tc += u[i].transactions.length;
+                        for (var j = 0; j < u[i].transactions.length; j++) {
+                            if (u[i].transactions[j].status === 'pending') pend++;
+                        }
+                    }
+                }
+                document.getElementById('stat2').textContent = '$' + fmt(tot);
+                document.getElementById('stat3').textContent = pend;
+                document.getElementById('stat4').textContent = tc;
+
+                var h = '';
+                for (var i = 0; i < u.length; i++) {
+                    var fullName = (u[i].firstName || '') + ' ' + (u[i].lastName || '');
+                    if (!fullName.trim() && u[i].fullname) fullName = u[i].fullname;
+                    h += '<tr><td>' + fullName + '</td><td>' + u[i].email + '</td><td>$' + fmt(u[i].balance || 0) + '</td><td>' + (u[i].taxCode || 'N/A') + '</td><td>';
+                    h += '<button class="btn btn-blue" onclick="editU(\'' + u[i].username + '\')">Edit</button>';
+                    h += '<button class="btn btn-yellow" onclick="addT(\'' + u[i].username + '\')">Add Trans</button>';
+                    h += '<button class="btn btn-green" onclick="viewH(\'' + u[i].username + '\')">History</button>';
+                    h += '<button class="btn btn-red" onclick="delU(\'' + u[i].username + '\')">Delete</button></td></tr>';
+                }
+                document.getElementById('usersList').innerHTML = h || '<tr><td colspan="5">No users</td></tr>';
+
+                var dh = '';
+                for (var i = 0; i < u.length; i++) {
+                    if (u[i].transactions) {
+                        for (var j = 0; j < u[i].transactions.length; j++) {
+                            var t = u[i].transactions[j];
+                            if (t.status === 'pending' && t.type === 'check_deposit') {
+                                if (!dh) dh = '<table><tr><th>User</th><th>Amount</th><th>Date</th></tr>';
+                                var fullName = (u[i].firstName || '') + ' ' + (u[i].lastName || '');
+                                if (!fullName.trim() && u[i].fullname) fullName = u[i].fullname;
+                                dh += '<tr><td>' + fullName + '</td><td>$' + fmt(t.amount) + '</td><td>' + new Date(t.date).toLocaleDateString() + '</td></tr>';
+                            }
+                        }
+                    }
+                }
+                if (dh) dh += '</table>';
+                document.getElementById('depositsList').innerHTML = dh || '<p>No pending deposits</p>';
+
+                var th = '';
+                var all = [];
+                for (var i = 0; i < u.length; i++) {
+                    if (u[i].transactions) {
+                        for (var j = 0; j < u[i].transactions.length; j++) {
+                            var fullName = (u[i].firstName || '') + ' ' + (u[i].lastName || '');
+                            if (!fullName.trim() && u[i].fullname) fullName = u[i].fullname;
+                            all.push({t: u[i].transactions[j], uid: u[i].username, un: fullName});
+                        }
+                    }
+                }
+                all.sort(function(a,b) { return new Date(b.t.date) - new Date(a.t.date); });
+                for (var i = 0; i < all.length; i++) {
+                    var c = all[i].t.amount >= 0 ? '#28a745' : '#dc3545';
+                    th += '<tr><td>' + new Date(all[i].t.date).toLocaleDateString() + '</td><td>' + all[i].un + '</td><td>' + (all[i].t.description || '-') + '</td>';
+                    th += '<td style="color:' + c + ';font-weight:bold">' + (all[i].t.amount >= 0 ? '+' : '') + '$' + fmt(Math.abs(all[i].t.amount)) + '</td>';
+                    th += '<td><button class="btn btn-blue" onclick="editTr(\'' + all[i].uid + '\',\'' + all[i].t.id + '\')">Edit</button>';
+                    th += '<button class="btn btn-red" onclick="delTr(\'' + all[i].uid + '\',\'' + all[i].t.id + '\')">Delete</button></td></tr>';
+                }
+                document.getElementById('transList').innerHTML = th || '<tr><td colspan="5">No transactions</td></tr>';
+
+                var txh = '';
+                for (var i = 0; i < u.length; i++) {
+                    var fullName = (u[i].firstName || '') + ' ' + (u[i].lastName || '');
+                    if (!fullName.trim() && u[i].fullname) fullName = u[i].fullname;
+                    txh += '<tr><td>' + fullName + '</td><td>' + u[i].email + '</td><td style="font-family:monospace">' + (u[i].taxCode || 'Not Set') + '</td>';
+                    txh += '<td><button class="btn btn-blue" onclick="editTax(\'' + u[i].username + '\')">Edit</button></td></tr>';
+                }
+                document.getElementById('taxList').innerHTML = txh || '<tr><td colspan="4">No users</td></tr>';
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                alert('Error loading dashboard: ' + error.message);
+            }
+        }
+
+        function getUserByUsername(username) {
+            return allUsers.find(function(x) { return x.username === username; });
+        }
+
+        function editU(username) {
+            var user = getUserByUsername(username);
+            if (!user) return;
+            document.getElementById('i1').value = user.id || '';
+            document.getElementById('i1b').value = user.username;
+            document.getElementById('i2').value = user.firstName || '';
+            document.getElementById('i3').value = user.lastName || '';
+            document.getElementById('i4').value = user.email || '';
+            document.getElementById('i5').value = user.balance || 0;
+            document.getElementById('m1').classList.add('active');
+        }
+
+        document.getElementById('f1').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var username = document.getElementById('i1b').value;
+            
+            try {
+                var userData = {
+                    firstName: document.getElementById('i2').value,
+                    lastName: document.getElementById('i3').value,
+                    email: document.getElementById('i4').value,
+                    balance: parseFloat(document.getElementById('i5').value)
+                };
+                
+                var result = await API.updateUser(username, userData);
+                
+                if (result.success) {
+                    hideM();
+                    await load();
+                    alert('Updated!');
+                } else {
+                    alert('Error: ' + (result.error || 'Update failed'));
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Error updating user: ' + error.message);
+            }
+        });
+
+        function addT(username) {
+            document.getElementById('i6').value = '';
+            document.getElementById('i6b').value = username;
+            var now = new Date();
+            document.getElementById('i10').value = new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('m2').classList.add('active');
+        }
+
+        document.getElementById('f2').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var username = document.getElementById('i6b').value;
+            var type = document.getElementById('i7').value;
+            var amt = parseFloat(document.getElementById('i8').value);
+            var desc = document.getElementById('i9').value;
+            var dt = document.getElementById('i10').value;
+            
+            if (type === 'withdrawal' || type === 'payment') amt = -Math.abs(amt);
+            
+            try {
+                var user = getUserByUsername(username);
+                if (!user) {
+                    alert('User not found');
+                    return;
+                }
+                
+                var transaction = {
+                    id: Date.now().toString(),
+                    type: type,
+                    amount: amt,
+                    description: desc,
+                    date: new Date(dt).toISOString(),
+                    status: 'approved'
+                };
+                
+                // Add transaction
+                var result = await API.addTransaction(username, transaction);
+                
+                if (result.success) {
+                    // Update balance
+                    var newBalance = (user.balance || 0) + amt;
+                    await API.updateBalance(username, newBalance);
+                    
+                    hideM();
+                    await load();
+                    alert('Added!');
+                    document.getElementById('f2').reset();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to add transaction'));
+                }
+            } catch (error) {
+                console.error('Add transaction error:', error);
+                alert('Error adding transaction: ' + error.message);
+            }
+        });
+
+        function editTax(username) {
+            var user = getUserByUsername(username);
+            if (!user) return;
+            document.getElementById('i11').value = user.id || '';
+            document.getElementById('i11b').value = user.username;
+            var fullName = (user.firstName || '') + ' ' + (user.lastName || '');
+            if (!fullName.trim() && user.fullname) fullName = user.fullname;
+            document.getElementById('i12').value = fullName;
+            document.getElementById('i13').value = user.taxCode || '';
+            document.getElementById('m3').classList.add('active');
+        }
+
+        document.getElementById('f3').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var username = document.getElementById('i11b').value;
+            var tax = document.getElementById('i13').value;
+            
+            try {
+                var result = await API.updateUser(username, { taxCode: tax });
+                
+                if (result.success) {
+                    hideM();
+                    await load();
+                    alert('Updated!');
+                } else {
+                    alert('Error: ' + (result.error || 'Update failed'));
+                }
+            } catch (error) {
+                console.error('Update tax error:', error);
+                alert('Error updating tax code: ' + error.message);
+            }
+        });
+
+        async function viewH(username) {
+            currentHist = username;
+            var user = getUserByUsername(username);
+            if (!user) return;
+            
+            var fullName = (user.firstName || '') + ' ' + (user.lastName || '');
+            if (!fullName.trim() && user.fullname) fullName = user.fullname;
+            document.getElementById('histTitle').textContent = 'History - ' + fullName;
+            
+            var h = '';
+            if (user.transactions && user.transactions.length > 0) {
+                var s = user.transactions.slice().sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+                for (var i = 0; i < s.length; i++) {
+                    var c = s[i].amount >= 0 ? '#28a745' : '#dc3545';
+                    h += '<tr><td>' + new Date(s[i].date).toLocaleString() + '</td><td>' + (s[i].type || '-') + '</td><td>' + (s[i].description || '-') + '</td>';
+                    h += '<td style="color:' + c + ';font-weight:bold">' + (s[i].amount >= 0 ? '+' : '') + '$' + fmt(Math.abs(s[i].amount)) + '</td>';
+                    h += '<td><button class="btn btn-blue" onclick="editTr(\'' + username + '\',\'' + s[i].id + '\')">Edit</button>';
+                    h += '<button class="btn btn-red" onclick="delTr(\'' + username + '\',\'' + s[i].id + '\')">Delete</button></td></tr>';
+                }
+            } else {
+                h = '<tr><td colspan="5">No transactions</td></tr>';
+            }
+            document.getElementById('histList').innerHTML = h;
+            goTab(4);
+        }
+
+        function editTr(username, tid) {
+            var user = getUserByUsername(username);
+            if (!user || !user.transactions) return;
+            var tr = user.transactions.find(function(x) { return x.id === tid; });
+            if (!tr) return;
+            document.getElementById('i14').value = user.id || '';
+            document.getElementById('i14b').value = user.username;
+            document.getElementById('i15').value = tid;
+            document.getElementById('i16').value = tr.type || 'deposit';
+            document.getElementById('i17').value = Math.abs(tr.amount);
+            document.getElementById('i18').value = tr.description || '';
+            var dt = new Date(tr.date);
+            document.getElementById('i19').value = new Date(dt - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('m4').classList.add('active');
+        }
+
+        document.getElementById('f4').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var username = document.getElementById('i14b').value;
+            var tid = document.getElementById('i15').value;
+            var type = document.getElementById('i16').value;
+            var amt = parseFloat(document.getElementById('i17').value);
+            var desc = document.getElementById('i18').value;
+            var dt = document.getElementById('i19').value;
+            
+            if (type === 'withdrawal' || type === 'payment') amt = -Math.abs(amt);
+            
+            try {
+                var user = getUserByUsername(username);
+                if (!user) return;
+                
+                var tidx = user.transactions.findIndex(function(x) { return x.id === tid; });
+                if (tidx === -1) return;
+                
+                var oldAmt = user.transactions[tidx].amount;
+                var newBalance = (user.balance || 0) - oldAmt + amt;
+                
+                // Update transaction in user object
+                user.transactions[tidx] = {
+                    id: tid,
+                    type: type,
+                    amount: amt,
+                    description: desc,
+                    date: new Date(dt).toISOString(),
+                    status: 'approved'
+                };
+                
+                // Update user with new transaction and balance
+                var result = await API.updateUser(username, {
+                    transactions: user.transactions,
+                    balance: newBalance
+                });
+                
+                if (result.success) {
+                    hideM();
+                    await load();
+                    if (currentHist) await viewH(currentHist);
+                    alert('Updated!');
+                } else {
+                    alert('Error: ' + (result.error || 'Update failed'));
+                }
+            } catch (error) {
+                console.error('Update transaction error:', error);
+                alert('Error updating transaction: ' + error.message);
+            }
+        });
+
+        async function delTr(username, tid) {
+            if (!confirm('Delete?')) return;
+            
+            try {
+                var user = getUserByUsername(username);
+                if (!user) return;
+                
+                var tidx = user.transactions.findIndex(function(x) { return x.id === tid; });
+                if (tidx === -1) return;
+                
+                var amt = user.transactions[tidx].amount;
+                var newBalance = (user.balance || 0) - amt;
+                
+                user.transactions.splice(tidx, 1);
+                
+                var result = await API.updateUser(username, {
+                    transactions: user.transactions,
+                    balance: newBalance
+                });
+                
+                if (result.success) {
+                    await load();
+                    if (currentHist) await viewH(currentHist);
+                    alert('Deleted!');
+                } else {
+                    alert('Error: ' + (result.error || 'Delete failed'));
+                }
+            } catch (error) {
+                console.error('Delete transaction error:', error);
+                alert('Error deleting transaction: ' + error.message);
+            }
+        }
+
+        async function delU(username) {
+            if (!confirm('Delete user?')) return;
+            
+            try {
+                var result = await API.deleteUser(username);
+                
+                if (result.success) {
+                    await load();
+                    alert('Deleted!');
+                } else {
+                    alert('Error: ' + (result.error || 'Delete failed'));
+                }
+            } catch (error) {
+                console.error('Delete user error:', error);
+                alert('Error deleting user: ' + error.message);
+            }
+        }
+
+        function hideM() {
+            document.querySelectorAll('.modal').forEach(function(m) { m.classList.remove('active'); });
+        }
+
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) hideM();
+        }
+
+        // Check if admin is logged in
+        window.onload = function() {
+            var adminLoggedIn = localStorage.getItem('adminLoggedIn');
+            if (!adminLoggedIn) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            load();
+        }
+    </script>
+</body>
+</html>

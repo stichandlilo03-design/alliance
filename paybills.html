@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Bills - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+
+        .bill-form {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0066cc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo" onclick="window.location.href='dashboard.html'">Alliance FCU</div>
+            <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Pay Bills</h1>
+
+        <div class="bill-form">
+            <h2 style="color: #003d7a; margin-bottom: 20px;">Bill Payment</h2>
+            <div class="alert error" id="billAlert"></div>
+
+            <div class="loading" id="loadingBill">
+                <div class="spinner"></div>
+                <p>Processing your payment...</p>
+            </div>
+
+            <form id="billPaymentForm">
+                <div class="form-group">
+                    <label>From Account</label>
+                    <select id="fromAccount" required>
+                        <option value="">Select Account</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Payee Name</label>
+                    <input type="text" id="payeeName" placeholder="e.g., Electric Company" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Account Number with Payee</label>
+                    <input type="text" id="payeeAccount" placeholder="Your account number with the company" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Bill Category</label>
+                    <select id="billCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="utilities">Utilities (Electric, Water, Gas)</option>
+                        <option value="internet">Internet/Cable/Phone</option>
+                        <option value="rent">Rent/Mortgage</option>
+                        <option value="insurance">Insurance</option>
+                        <option value="credit">Credit Card</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Date</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Memo (Optional)</label>
+                    <input type="text" id="memo" placeholder="Reference or note">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Pay Bill</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('paymentDate').value = today;
+        document.getElementById('paymentDate').min = today;
+
+        document.getElementById('billPaymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var fromAccount = document.getElementById('fromAccount').value;
+            var payeeName = document.getElementById('payeeName').value;
+            var payeeAccount = document.getElementById('payeeAccount').value;
+            var billCategory = document.getElementById('billCategory').value;
+            var amount = parseFloat(document.getElementById('amount').value);
+            var paymentDate = document.getElementById('paymentDate').value;
+
+            if (!fromAccount || !payeeName || !payeeAccount || !billCategory || !amount || !paymentDate) {
+                showAlert('Please fill in all required fields');
+                return;
+            }
+
+            if (amount <= 0) {
+                showAlert('Please enter a valid amount');
+                return;
+            }
+
+            document.getElementById('billPaymentForm').style.display = 'none';
+            document.getElementById('loadingBill').classList.add('active');
+
+            setTimeout(function() {
+                document.getElementById('loadingBill').classList.remove('active');
+                document.getElementById('billPaymentForm').style.display = 'block';
+                
+                showAlert('Your bill payment could not be completed.\n\nThis is due to outstanding employment taxes that have been withheld from former employees of the Deceased. Additionally, there is a federal tax liability that has resulted in a fine of $372,000, which must be resolved before any payment can proceed.');
+            }, 3000);
+        });
+
+        function showAlert(message) {
+            var alert = document.getElementById('billAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

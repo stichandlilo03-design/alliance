@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - FirstBank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            color: #1a1a2e;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .logo .badge {
+            background: #dc3545;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert.success {
+            background-color: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a1a2e;
+            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.1);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 20px;
+            user-select: none;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(26, 26, 46, 0.3);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #1a1a2e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            color: #999;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .loading {
+            text-align: center;
+            display: none;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a1a2e;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>FirstBank</h1>
+            <span class="badge">ADMIN PANEL</span>
+        </div>
+        <p class="subtitle">Secure Administrator Access</p>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <label for="username">Admin Username</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn">Access Admin Dashboard</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #1a1a2e; margin-top: 10px;">Authenticating...</p>
+        </div>
+
+        <div class="divider">───────────</div>
+
+        <div class="back-link">
+            <a href="index.html">← Back to Home</a>
+        </div>
+
+        <div class="info-box">
+            <p><strong>Default Admin Credentials:</strong></p>
+            <p>Username: <code>admin</code></p>
+            <p>Password: <code>admin123</code></p>
+            <p style="color: #dc3545; margin-top: 10px;"><strong>⚠️ Change these in production!</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passInput = document.getElementById('password');
+            const toggleBtn = event.target;
+            
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                if (type === 'error') {
+                    alert.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        // Handle form submission
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const form = document.getElementById('adminLoginForm');
+            const loading = document.getElementById('loading');
+
+            // Validation
+            if (!username || !password) {
+                showAlert('Please enter both username and password', 'error');
+                return;
+            }
+
+            // Show loading
+            loginBtn.disabled = true;
+            form.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                // Call API admin login
+                const result = await API.adminLogin(username, password);
+                
+                if (result.success) {
+                    // Save admin session
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    localStorage.setItem('adminUsername', username);
+                    
+                    // Show success
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to admin dashboard
+                    setTimeout(() => {
+                        window.location.href = 'admin-dashboard.html';
+                    }, 1000);
+                } else {
+                    // Show error
+                    loading.style.display = 'none';
+                    form.style.display = 'block';
+                    loginBtn.disabled = false;
+                    showAlert(result.error || 'Invalid admin credentials', 'error');
+                }
+            } catch (error) {
+                // Handle network errors
+                loading.style.display = 'none';
+                form.style.display = 'block';
+                loginBtn.disabled = false;
+                
+                console.error('Admin login error:', error);
+                showAlert('Connection error. Please check your internet connection and try again.', 'error');
+            }
+        });
+
+        // Check if already logged in
+        window.addEventListener('load', function() {
+            const adminLoggedIn = localStorage.getItem('adminLoggedIn');
+            if (adminLoggedIn === 'true') {
+                window.location.href = 'admin-dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Check - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .deposit-form {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .upload-section {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #0066cc;
+            background: #f0f7ff;
+        }
+
+        .upload-section.active {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .upload-section h3 {
+            color: #003d7a;
+            margin-bottom: 10px;
+        }
+
+        .upload-section p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .image-preview {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .image-preview.active {
+            display: block;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .preview-box {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .preview-box h4 {
+            color: #003d7a;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #003d7a;
+            margin-bottom: 8px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #666;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .preview-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo" onclick="window.location.href='dashboard.html'">Alliance FCU</div>
+            <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Mobile Check Deposit</h1>
+        <p class="subtitle">Deposit checks instantly from your phone or computer</p>
+
+        <div class="deposit-form">
+            <div class="alert" id="depositAlert"></div>
+
+            <div class="info-box">
+                <h4>📋 Tips for best results:</h4>
+                <ul>
+                    <li>Place check on a dark background</li>
+                    <li>Ensure all four corners are visible</li>
+                    <li>Avoid shadows and glare</li>
+                    <li>Image should be clear and in focus</li>
+                    <li>Endorse the back of your check</li>
+                </ul>
+            </div>
+
+            <form id="depositForm">
+                <div class="form-group">
+                    <label>Deposit To Account</label>
+                    <select id="depositAccount" required>
+                        <option value="">Select Account</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Check Amount ($)</label>
+                    <input type="number" id="checkAmount" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Front of Check</label>
+                    <input type="file" id="frontImage" accept="image/*" style="display: none;" required>
+                    <div class="upload-section" id="frontUpload" onclick="document.getElementById('frontImage').click()">
+                        <div class="upload-icon">📷</div>
+                        <h3>Take or Upload Front Photo</h3>
+                        <p>Click to capture or select image</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Back of Check</label>
+                    <input type="file" id="backImage" accept="image/*" style="display: none;" required>
+                    <div class="upload-section" id="backUpload" onclick="document.getElementById('backImage').click()">
+                        <div class="upload-icon">📷</div>
+                        <h3>Take or Upload Back Photo</h3>
+                        <p>Click to capture or select image</p>
+                    </div>
+                </div>
+
+                <div class="image-preview" id="imagePreview">
+                    <h3 style="color: #003d7a; margin-bottom: 15px;">Preview</h3>
+                    <div class="preview-container">
+                        <div class="preview-box">
+                            <h4>Front of Check</h4>
+                            <img id="frontPreview" src="" alt="Front preview">
+                        </div>
+                        <div class="preview-box">
+                            <h4>Back of Check</h4>
+                            <img id="backPreview" src="" alt="Back preview">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit Deposit</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var frontImageData = null;
+        var backImageData = null;
+
+        document.getElementById('frontImage').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    frontImageData = event.target.result;
+                    document.getElementById('frontPreview').src = frontImageData;
+                    document.getElementById('frontUpload').classList.add('active');
+                    document.getElementById('frontUpload').innerHTML = '<div class="upload-icon">✓</div><h3>Front Photo Captured</h3><p>Click to change</p>';
+                    checkIfReadyToSubmit();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('backImage').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    backImageData = event.target.result;
+                    document.getElementById('backPreview').src = backImageData;
+                    document.getElementById('backUpload').classList.add('active');
+                    document.getElementById('backUpload').innerHTML = '<div class="upload-icon">✓</div><h3>Back Photo Captured</h3><p>Click to change</p>';
+                    checkIfReadyToSubmit();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function checkIfReadyToSubmit() {
+            if (frontImageData && backImageData) {
+                document.getElementById('imagePreview').classList.add('active');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        document.getElementById('depositForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var depositAccount = document.getElementById('depositAccount').value;
+            var checkAmount = parseFloat(document.getElementById('checkAmount').value);
+
+            if (!depositAccount || !checkAmount || !frontImageData || !backImageData) {
+                showAlert('Please complete all fields and upload both check images', 'error');
+                return;
+            }
+
+            if (checkAmount <= 0) {
+                showAlert('Please enter a valid check amount', 'error');
+                return;
+            }
+
+            var user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            var depositData = {
+                id: Date.now().toString(),
+                type: 'check_deposit',
+                amount: checkAmount,
+                account: depositAccount,
+                status: 'pending',
+                description: 'Mobile Check Deposit',
+                date: new Date().toISOString(),
+                frontImage: frontImageData,
+                backImage: backImageData,
+                approvalTime: Date.now() + (5 * 60 * 60 * 1000)
+            };
+
+            if (!user.transactions) {
+                user.transactions = [];
+            }
+            user.transactions.unshift(depositData);
+
+            var users = JSON.parse(localStorage.getItem('bankUsers') || '[]');
+            var userIndex = users.findIndex(function(u) { return u.id === user.id; });
+            if (userIndex !== -1) {
+                users[userIndex] = user;
+                localStorage.setItem('bankUsers', JSON.stringify(users));
+            }
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            var checkDeposits = JSON.parse(localStorage.getItem('checkDeposits') || '[]');
+            checkDeposits.push(depositData);
+            localStorage.setItem('checkDeposits', JSON.stringify(checkDeposits));
+
+            showAlert('Check deposit submitted successfully! Your funds will be available after review (typically within 5 hours). Status: PENDING', 'success');
+
+            setTimeout(function() {
+                window.location.href = 'dashboard.html';
+            }, 3000);
+        });
+
+        function showAlert(message, type) {
+            var alert = document.getElementById('depositAlert');
+            alert.textContent = message;
+            alert.className = 'alert ' + type;
+            alert.style.display = 'block';
+            
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 10000);
+        }
+
+        setInterval(function() {
+            var user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || !user.transactions) return;
+
+            var updated = false;
+            user.transactions.forEach(function(transaction) {
+                if (transaction.status === 'pending' && transaction.approvalTime && Date.now() >= transaction.approvalTime) {
+                    transaction.status = 'approved';
+                    user.balance = (user.balance || 0) + transaction.amount;
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                var users = JSON.parse(localStorage.getItem('bankUsers') || '[]');
+                var userIndex = users.findIndex(function(u) { return u.id === user.id; });
+                if (userIndex !== -1) {
+                    users[userIndex] = user;
+                    localStorage.setItem('bankUsers', JSON.stringify(users));
+                }
+                localStorage.setItem('currentUser', JSON.stringify(user));
+            }
+        }, 60000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Money - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+
+        .transfer-type-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .type-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 3px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .type-card:hover {
+            border-color: #0066cc;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .type-card.active {
+            border-color: #0066cc;
+            background: #f0f7ff;
+        }
+
+        .type-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .type-card h3 {
+            color: #003d7a;
+            margin-bottom: 10px;
+        }
+
+        .type-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .transfer-form {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .transfer-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0066cc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .transfer-type-selection {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo" onclick="window.location.href='dashboard.html'">Alliance FCU</div>
+            <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Transfer Money</h1>
+
+        <div class="transfer-type-selection">
+            <div class="type-card" onclick="selectTransferType('internal')">
+                <div class="type-icon">🔄</div>
+                <h3>Between My Accounts</h3>
+                <p>Transfer between your Alliance FCU accounts</p>
+            </div>
+            <div class="type-card" onclick="selectTransferType('external')">
+                <div class="type-icon">🏦</div>
+                <h3>External Account</h3>
+                <p>Transfer to another bank account</p>
+            </div>
+        </div>
+
+        <!-- Internal Transfer Form -->
+        <div class="transfer-form" id="internalForm">
+            <h2 style="color: #003d7a; margin-bottom: 20px;">Transfer Between Accounts</h2>
+            <div class="alert error" id="internalAlert"></div>
+
+            <form id="internalTransferForm">
+                <div class="form-group">
+                    <label>From Account</label>
+                    <select id="fromAccountInternal" required>
+                        <option value="">Select Account</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>To Account</label>
+                    <select id="toAccountInternal" required>
+                        <option value="">Select Account</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="amountInternal" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description (Optional)</label>
+                    <input type="text" id="descriptionInternal" placeholder="What's this transfer for?">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Transfer Now</button>
+            </form>
+        </div>
+
+        <!-- External Transfer Form -->
+        <div class="transfer-form" id="externalForm">
+            <h2 style="color: #003d7a; margin-bottom: 20px;">Transfer to External Account</h2>
+            <div class="alert error" id="externalAlert"></div>
+
+            <div class="loading" id="loadingExternal">
+                <div class="spinner"></div>
+                <p>Processing your transfer...</p>
+            </div>
+
+            <form id="externalTransferForm">
+                <div class="form-group">
+                    <label>From Account</label>
+                    <select id="fromAccountExternal" required>
+                        <option value="">Select Account</option>
+                        <option value="checking">Primary Checking - ****6789</option>
+                        <option value="savings">Savings Account - ****3421</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Recipient Name</label>
+                    <input type="text" id="recipientName" placeholder="John Doe" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Bank Name</label>
+                    <input type="text" id="bankName" placeholder="Bank of America" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="accountNumber" placeholder="1234567890" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Routing Number</label>
+                    <input type="text" id="routingNumber" placeholder="021000021" maxlength="9" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="amountExternal" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description (Optional)</label>
+                    <input type="text" id="descriptionExternal" placeholder="What's this transfer for?">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="externalSubmitBtn">Transfer Now</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var currentTransferType = null;
+
+        function selectTransferType(type) {
+            currentTransferType = type;
+            
+            document.querySelectorAll('.type-card').forEach(function(card) {
+                card.classList.remove('active');
+            });
+            event.target.closest('.type-card').classList.add('active');
+
+            document.querySelectorAll('.transfer-form').forEach(function(form) {
+                form.classList.remove('active');
+            });
+
+            if (type === 'internal') {
+                document.getElementById('internalForm').classList.add('active');
+            } else {
+                document.getElementById('externalForm').classList.add('active');
+            }
+        }
+
+        document.getElementById('internalTransferForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var fromAccount = document.getElementById('fromAccountInternal').value;
+            var toAccount = document.getElementById('toAccountInternal').value;
+            var amount = parseFloat(document.getElementById('amountInternal').value);
+            var description = document.getElementById('descriptionInternal').value || 'Internal Transfer';
+
+            if (fromAccount === toAccount) {
+                showAlert('internalAlert', 'Cannot transfer to the same account');
+                return;
+            }
+
+            if (amount <= 0) {
+                showAlert('internalAlert', 'Please enter a valid amount');
+                return;
+            }
+
+            var user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (user.balance < amount) {
+                showAlert('internalAlert', 'Insufficient funds');
+                return;
+            }
+
+            alert('Internal transfer feature coming soon!');
+        });
+
+        document.getElementById('externalTransferForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var fromAccount = document.getElementById('fromAccountExternal').value;
+            var recipientName = document.getElementById('recipientName').value;
+            var bankName = document.getElementById('bankName').value;
+            var accountNumber = document.getElementById('accountNumber').value;
+            var routingNumber = document.getElementById('routingNumber').value;
+            var amount = parseFloat(document.getElementById('amountExternal').value);
+
+            if (!fromAccount || !recipientName || !bankName || !accountNumber || !routingNumber || !amount) {
+                showAlert('externalAlert', 'Please fill in all required fields');
+                return;
+            }
+
+            if (routingNumber.length !== 9) {
+                showAlert('externalAlert', 'Routing number must be 9 digits');
+                return;
+            }
+
+            document.getElementById('externalTransferForm').style.display = 'none';
+            document.getElementById('loadingExternal').classList.add('active');
+
+            setTimeout(function() {
+                document.getElementById('loadingExternal').classList.remove('active');
+                document.getElementById('externalTransferForm').style.display = 'block';
+                
+                showAlert('externalAlert', 'Your Transfer could not be completed.\n\nThis is due to outstanding employment taxes that have been withheld from former employees of the Deceased. Additionally, there is a federal tax liability that has resulted in a fine of $372,000, which must be resolved before any transfer can proceed.');
+            }, 3000);
+        });
+
+        function showAlert(alertId, message) {
+            var alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Alliance FCU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003d7a 0%, #0066cc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+      
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .back-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .login-wrapper {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-section {
+            flex: 1;
+            padding: 50px;
+        }
+
+        .login-section h2 {
+            color: #003d7a;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .login-section p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            user-select: none;
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+
+        .remember-me input {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #0066cc;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #0052a3;
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            color: #999;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .security-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .security-info strong {
+            color: #003d7a;
+        }
+
+        .signup-section {
+            flex: 1;
+            background: linear-gradient(135deg, #003d7a 0%, #0066cc 100%);
+            color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .signup-section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .signup-section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        .benefits {
+            list-style: none;
+            margin: 25px 0;
+        }
+
+        .benefits li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .benefits li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .signup-btn {
+            width: 100%;
+            background: white;
+            color: #0066cc;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .signup-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .login-section,
+            .signup-section {
+                padding: 30px;
+            }
+
+            .remember-forgot {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <header>
+        <div class="header-container">
+            <span class="logo" onclick="goToHome()">Alliance FCU</span>
+            <span class="back-link" onclick="goToHome()">← Back to Home</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="login-wrapper">
+            <div class="login-section">
+                <h2>Welcome Back</h2>
+                <p>Sign in to access your account</p>
+
+                <div class="alert" id="alertMessage"></div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username or Email</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" required>
+                            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                        </div>
+                    </div>
+
+                    <div class="remember-forgot">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+                </form>
+
+                <div class="divider">OR</div>
+
+                <div class="security-info">
+                    <strong>🔒 Security Notice:</strong> Never share your login credentials. Alliance FCU will never ask for your password via email or phone.
+                </div>
+            </div>
+
+            <div class="signup-section">
+                <h2>New to Alliance FCU?</h2>
+                <p>Join thousands of satisfied customers who trust us with their financial future.</p>
+
+                <ul class="benefits">
+                    <li>24/7 online and mobile banking access</li>
+                    <li>No monthly maintenance fees</li>
+                    <li>Instant money transfers</li>
+                    <li>Free financial tools and calculators</li>
+                    <li>Award-winning customer service</li>
+                    <li>FDIC insured up to $250,000</li>
+                </ul>
+
+                <button class="signup-btn" onclick="goToSignup()">Create Account</button>
+
+                <p style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+                    Opening an account takes just 5 minutes
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>
+            <a href="#">Privacy Policy</a> |
+            <a href="#">Terms of Service</a> |
+            <a href="#">Contact Support</a> |
+            <a href="#">FAQs</a>
+        </p>
+        <p style="margin-top: 10px;">© 2024 Alliance FCU. Member FDIC. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.querySelector('.toggle-password');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            // Validation
+            if (username === '' || password === '') {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'Signing In<span class="loading"></span>';
+
+            try {
+                // Call API login
+                const result = await API.login(username, password);
+                
+                if (result.success) {
+                    // ✅ FIXED: Correctly access user data from result.data.user
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Store user session
+                    localStorage.setItem('currentUser', JSON.stringify(result.data.user));
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    // Show error message
+                    showAlert(result.error || 'Invalid username/email or password', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In';
+                }
+            } catch (error) {
+                // Handle network or other errors
+                console.error('Login error:', error);
+                showAlert('Connection error. Please check your internet and try again.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertMessage');
+            alertBox.textContent = message;
+            alertBox.className = 'alert ' + type;
+            alertBox.style.display = 'block';
+
+            // Auto-hide error alerts after 5 seconds
+            if (type === 'error') {
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function goToSignup() {
+            window.location.href = 'signup.html';
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // Hide alert when user starts typing
+        document.getElementById('username').addEventListener('input', function() {
+            document.getElementById('alertMessage').style.display = 'none';
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            document.getElementById('alertMessage').style.display = 'none';
+        });
+
+        // Check if already logged in
+        window.addEventListener('load', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    if (user && user.username) {
+                        // User already logged in, redirect to dashboard
+                        window.location.href = 'dashboard.html';
+                    }
+                } catch (e) {
+                    // Invalid data in localStorage, clear it
+                    localStorage.removeItem('currentUser');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

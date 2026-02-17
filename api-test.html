@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Debug - FirstBank</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #003d7a; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; margin: 10px 0; }
+        button:hover { background: #0052a3; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 10px 0; border-radius: 5px; color: #155724; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 10px 0; border-radius: 5px; color: #721c24; }
+        .info { background: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 10px 0; border-radius: 5px; color: #0c5460; }
+    </style>
+</head>
+<script src="config.js"></script>
+<body>
+    <div class="container">
+        <div class="box">
+            <h1>🔍 Login Debugger</h1>
+            <p>This tool shows you exactly what's happening during login</p>
+
+            <div>
+                <label><strong>Username or Email:</strong></label>
+                <input type="text" id="username" placeholder="Enter username or email">
+                
+                <label><strong>Password:</strong></label>
+                <input type="password" id="password" placeholder="Enter password">
+                
+                <button onclick="debugLogin()">🔍 Debug Login</button>
+                <button onclick="showAllUsers()">👥 Show All Users in Database</button>
+            </div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function debugLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const results = document.getElementById('results');
+            
+            results.innerHTML = '<div class="box"><h3>🔄 Testing Login...</h3></div>';
+            
+            let html = '';
+            
+            // Step 1: Show what we're sending
+            html += '<div class="box">';
+            html += '<h3>Step 1: Data Being Sent</h3>';
+            html += '<pre>' + JSON.stringify({ username, password }, null, 2) + '</pre>';
+            html += '</div>';
+            
+            // Step 2: Get all users from database
+            html += '<div class="box">';
+            html += '<h3>Step 2: Checking Database</h3>';
+            html += '<p>Fetching all users to compare...</p>';
+            
+            try {
+                const usersResult = await API.getUsers();
+                
+                if (usersResult.success) {
+                    const users = usersResult.data.users || [];
+                    
+                    html += '<p><strong>Total users in database:</strong> ' + users.length + '</p>';
+                    
+                    // Check if username exists
+                    const userFound = users.find(u => 
+                        u.username === username || u.email === username
+                    );
+                    
+                    if (userFound) {
+                        html += '<div class="success">✅ User Found in Database!</div>';
+                        html += '<p><strong>Username in DB:</strong> <code>' + userFound.username + '</code></p>';
+                        html += '<p><strong>Email in DB:</strong> <code>' + userFound.email + '</code></p>';
+                        html += '<p><strong>Password in DB:</strong> <code>' + userFound.password + '</code></p>';
+                        html += '<p><strong>Your input username:</strong> <code>' + username + '</code></p>';
+                        html += '<p><strong>Your input password:</strong> <code>' + password + '</code></p>';
+                        
+                        // Compare
+                        if (userFound.username === username || userFound.email === username) {
+                            html += '<div class="success">✅ Username/Email matches!</div>';
+                        } else {
+                            html += '<div class="error">❌ Username/Email does NOT match exactly</div>';
+                        }
+                        
+                        if (userFound.password === password) {
+                            html += '<div class="success">✅ Password matches!</div>';
+                        } else {
+                            html += '<div class="error">❌ Password does NOT match</div>';
+                            html += '<p><strong>Expected:</strong> <code>' + userFound.password + '</code></p>';
+                            html += '<p><strong>You entered:</strong> <code>' + password + '</code></p>';
+                            html += '<p><strong>Length difference:</strong> Expected ' + userFound.password.length + ' chars, got ' + password.length + ' chars</p>';
+                        }
+                    } else {
+                        html += '<div class="error">❌ User NOT found in database</div>';
+                        html += '<p>Searched for: <code>' + username + '</code></p>';
+                        html += '<p><strong>Available usernames:</strong></p><ul>';
+                        users.forEach(u => {
+                            html += '<li><code>' + u.username + '</code> (email: ' + u.email + ')</li>';
+                        });
+                        html += '</ul>';
+                    }
+                } else {
+                    html += '<div class="error">❌ Could not load users: ' + usersResult.error + '</div>';
+                }
+            } catch (error) {
+                html += '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+            
+            html += '</div>';
+            
+            // Step 3: Try actual login
+            html += '<div class="box">';
+            html += '<h3>Step 3: Attempting Actual Login via API</h3>';
+            
+            try {
+                const loginResult = await API.login(username, password);
+                
+                if (loginResult.success) {
+                    html += '<div class="success"><strong>✅ LOGIN SUCCESSFUL!</strong></div>';
+                    html += '<h4>User Data Received:</h4>';
+                    html += '<pre>' + JSON.stringify(loginResult.data.user, null, 2) + '</pre>';
+                    html += '<div class="info"><strong>Good news!</strong> Your login credentials are correct. The issue might be in how the login page handles the response.</div>';
+                } else {
+                    html += '<div class="error"><strong>❌ LOGIN FAILED</strong></div>';
+                    html += '<p><strong>Error message:</strong> ' + (loginResult.error || 'Unknown error') + '</p>';
+                    html += '<h4>Full Response:</h4>';
+                    html += '<pre>' + JSON.stringify(loginResult, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                html += '<div class="error">❌ Error during login: ' + error.message + '</div>';
+            }
+            
+            html += '</div>';
+            
+            results.innerHTML = html;
+        }
+
+        async function showAllUsers() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="box"><h3>🔄 Loading Users...</h3></div>';
+            
+            try {
+                const usersResult = await API.getUsers();
+                
+                if (usersResult.success) {
+                    const users = usersResult.data.users || [];
+                    
+                    let html = '<div class="box">';
+                    html += '<h3>👥 All Users in Database (' + users.length + ')</h3>';
+                    
+                    if (users.length > 0) {
+                        html += '<table style="width:100%; border-collapse: collapse;">';
+                        html += '<tr style="background:#f0f0f0;">';
+                        html += '<th style="padding:10px; border:1px solid #ddd;">Username</th>';
+                        html += '<th style="padding:10px; border:1px solid #ddd;">Email</th>';
+                        html += '<th style="padding:10px; border:1px solid #ddd;">Password</th>';
+                        html += '<th style="padding:10px; border:1px solid #ddd;">Balance</th>';
+                        html += '</tr>';
+                        
+                        users.forEach(u => {
+                            html += '<tr>';
+                            html += '<td style="padding:10px; border:1px solid #ddd;"><code>' + u.username + '</code></td>';
+                            html += '<td style="padding:10px; border:1px solid #ddd;">' + u.email + '</td>';
+                            html += '<td style="padding:10px; border:1px solid #ddd;"><code>' + u.password + '</code></td>';
+                            html += '<td style="padding:10px; border:1px solid #ddd;">$' + (u.balance || 0).toFixed(2) + '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</table>';
+                        html += '<div class="info" style="margin-top:20px;"><strong>💡 Tip:</strong> Copy a username and password from above, paste them in the form, and click "Debug Login"</div>';
+                    } else {
+                        html += '<div class="error">No users found. Create an account first!</div>';
+                    }
+                    
+                    html += '</div>';
+                    results.innerHTML = html;
+                } else {
+                    results.innerHTML = '<div class="box"><div class="error">Error: ' + usersResult.error + '</div></div>';
+                }
+            } catch (error) {
+                results.innerHTML = '<div class="box"><div class="error">Error: ' + error.message + '</div></div>';
+            }
+        }
+    </script>
+</body>
+</html>
