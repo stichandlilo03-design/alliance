@@ -324,6 +324,54 @@
             color: #dc3545;
         }
 
+        /* Account Status Banners */
+        .status-banner {
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .status-banner .banner-icon { font-size: 32px; }
+        .status-banner h3 { margin-bottom: 5px; }
+        .status-banner p { margin: 0; font-size: 14px; opacity: 0.9; }
+
+        .banner-restricted {
+            background: linear-gradient(135deg, #fff3cd, #ffe69c);
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+        .banner-frozen {
+            background: linear-gradient(135deg, #cce5ff, #9ec5fe);
+            color: #004085;
+            border: 1px solid #007bff;
+        }
+        .banner-suspended {
+            background: linear-gradient(135deg, #f8d7da, #f1aeb5);
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+        .banner-closed {
+            background: linear-gradient(135deg, #e2e3e5, #c6c8ca);
+            color: #383d41;
+            border: 1px solid #6c757d;
+        }
+
+        .disabled-overlay {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.4;
+            user-select: none;
+        }
+        .disabled-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: transparent;
+            z-index: 10;
+        }
+
         .loading-overlay {
             text-align: center;
             padding: 20px;
@@ -385,6 +433,9 @@
     </header>
 
     <div class="main-container">
+        <!-- Account Status Banner (shown when not active) -->
+        <div id="statusBanner" style="display:none;"></div>
+
         <div class="welcome-section">
             <h1>Welcome back, <span id="welcomeName">User</span>!</h1>
             <p>Here's what's happening with your accounts today.</p>
@@ -519,6 +570,89 @@
         }
 
         // ═══════════════════════════════════════════════════════════
+        // Account Status Handling
+        // ═══════════════════════════════════════════════════════════
+        function displayAccountStatus(user) {
+            var status = user.status || 'active';
+            var reason = user.statusReason || '';
+            var banner = document.getElementById('statusBanner');
+
+            if (status === 'active') {
+                banner.style.display = 'none';
+                return;
+            }
+
+            var configs = {
+                restricted: {
+                    icon: '⚠️',
+                    title: 'Account Restricted',
+                    message: 'Your account has been restricted. You can view your balance and history, but transfers, payments, and withdrawals are temporarily disabled.',
+                    bannerClass: 'banner-restricted'
+                },
+                frozen: {
+                    icon: '❄️',
+                    title: 'Account Frozen',
+                    message: 'Your account has been frozen. All transactions are temporarily disabled. Please contact support for assistance.',
+                    bannerClass: 'banner-frozen'
+                },
+                suspended: {
+                    icon: '🚫',
+                    title: 'Account Suspended',
+                    message: 'Your account has been suspended. Access to account features is disabled. Please contact support immediately.',
+                    bannerClass: 'banner-suspended'
+                },
+                closed: {
+                    icon: '🔒',
+                    title: 'Account Closed',
+                    message: 'This account has been permanently closed. Please contact support if you believe this is an error.',
+                    bannerClass: 'banner-closed'
+                }
+            };
+
+            var cfg = configs[status];
+            if (!cfg) return;
+
+            var reasonHtml = reason ? '<p style="margin-top:8px;font-style:italic;"><strong>Reason:</strong> ' + reason + '</p>' : '';
+
+            banner.innerHTML = '<div class="status-banner ' + cfg.bannerClass + '">' +
+                '<div class="banner-icon">' + cfg.icon + '</div>' +
+                '<div><h3>' + cfg.title + '</h3><p>' + cfg.message + '</p>' + reasonHtml +
+                '<p style="margin-top:8px;"><strong>Contact:</strong> 1-800-BANK-HELP or visit your nearest branch.</p></div></div>';
+            banner.style.display = 'block';
+
+            // Disable features based on status
+            var quickActions = document.querySelector('.quick-actions');
+            var accountActions = document.querySelectorAll('.account-actions');
+
+            if (status === 'restricted') {
+                // Disable transfer, pay, deposit — but allow viewing
+                var cards = quickActions.querySelectorAll('.action-card');
+                cards.forEach(function(card) {
+                    var text = card.querySelector('h3').textContent;
+                    if (text !== 'Statements') {
+                        card.classList.add('disabled-overlay');
+                        card.onclick = function() { alert('This feature is unavailable while your account is restricted.'); };
+                    }
+                });
+                accountActions.forEach(function(div) {
+                    div.querySelectorAll('.account-btn').forEach(function(btn) {
+                        if (!btn.textContent.includes('View')) {
+                            btn.classList.add('disabled-overlay');
+                            btn.onclick = function(e) { e.preventDefault(); alert('Transfers are unavailable while your account is restricted.'); };
+                        }
+                    });
+                });
+            }
+
+            if (status === 'frozen' || status === 'suspended' || status === 'closed') {
+                // Disable ALL actions
+                quickActions.classList.add('disabled-overlay');
+                quickActions.onclick = function(e) { e.stopPropagation(); alert('Your account is ' + status + '. All features are disabled.'); };
+                accountActions.forEach(function(div) { div.classList.add('disabled-overlay'); });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // KEY FIX: Fetch fresh data from API on every page load
         // ═══════════════════════════════════════════════════════════
         window.onload = async function() {
@@ -546,6 +680,7 @@
                     displayBalance(freshUser);
                     displayTransactions(freshUser);
                     displayTaxCode(freshUser);
+                    displayAccountStatus(freshUser);
                 } else {
                     // API call failed, use cached data
                     console.warn('Could not fetch fresh data, using cached:', result.error);
