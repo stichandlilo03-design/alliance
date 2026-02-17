@@ -4,7 +4,6 @@ let pool;
 
 function getPool() {
   if (!pool) {
-    // Try multiple env var names (Vercel/Supabase use different ones)
     const connectionString =
       process.env.POSTGRES_URL_NON_POOLING ||
       process.env.POSTGRES_URL ||
@@ -15,6 +14,11 @@ function getPool() {
       ssl: { rejectUnauthorized: false },
       max: 5,
       idleTimeoutMillis: 30000,
+    });
+
+    // Prevent crash on idle client errors
+    pool.on('error', (err) => {
+      console.error('Unexpected pool error:', err);
     });
   }
   return pool;
