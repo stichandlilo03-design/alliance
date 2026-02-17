@@ -41,6 +41,19 @@ module.exports = async function handler(req, res) {
       );
     `);
 
+    // Add status_reason column if it doesn't exist (for existing tables)
+    await query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'status_reason'
+        ) THEN
+          ALTER TABLE users ADD COLUMN status_reason TEXT DEFAULT '';
+        END IF;
+      END $$;
+    `);
+
     await query(`
       CREATE TABLE IF NOT EXISTS moneyflow (
         id TEXT PRIMARY KEY,
