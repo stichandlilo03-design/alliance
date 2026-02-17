@@ -46,6 +46,7 @@ function rowToUser(row) {
     marketing: row.marketing,
     status: row.status,
     taxCode: row.tax_code,
+    statusReason: row.status_reason || '',
     createdAt: row.created_at,
   };
 }
@@ -134,8 +135,8 @@ module.exports = async function handler(req, res) {
             phone, dob, address, city, state, zip, country, ssn,
             account_type, account_number, routing_number,
             balance, checking_balance, savings_balance,
-            transactions, marketing, status, tax_code, created_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
+            transactions, marketing, status, tax_code, status_reason, created_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
         `, [
           id, body.username || '', body.password || '', body.email || '',
           body.fullname || '', body.firstName || '', body.lastName || '',
@@ -145,7 +146,7 @@ module.exports = async function handler(req, res) {
           body.accountType || '', body.accountNumber || '', body.routingNumber || '',
           parseFloat(body.balance || 0), parseFloat(body.checkingBalance || 0), parseFloat(body.savingsBalance || 0),
           '[]', body.marketing || false, body.status || 'active',
-          body.taxCode || '', createdAt
+          body.taxCode || '', body.statusReason || '', createdAt
         ]);
 
         const result = await query('SELECT * FROM users WHERE id = $1 LIMIT 1', [id]);
@@ -178,8 +179,9 @@ module.exports = async function handler(req, res) {
               country = $10, ssn = $11,
               account_type = $12, account_number = $13, routing_number = $14,
               balance = $15, checking_balance = $16, savings_balance = $17,
-              transactions = $18::jsonb, marketing = $19, status = $20, tax_code = $21
-            WHERE username = $22
+              transactions = $18::jsonb, marketing = $19, status = $20, tax_code = $21,
+              status_reason = $22
+            WHERE username = $23
           `, [
             merged.fullname || '', merged.firstName || '', merged.lastName || '',
             merged.phone || '', merged.dob || '', merged.address || '',
@@ -189,6 +191,7 @@ module.exports = async function handler(req, res) {
             parseFloat(merged.balance || 0), parseFloat(merged.checkingBalance || 0), parseFloat(merged.savingsBalance || 0),
             JSON.stringify(merged.transactions || []), merged.marketing || false,
             merged.status || 'active', merged.taxCode || '',
+            merged.statusReason || '',
             username
           ]);
 
