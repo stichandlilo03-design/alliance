@@ -423,9 +423,7 @@
                 document.getElementById('loadingExternal').classList.remove('active');
                 document.getElementById('externalTransferForm').style.display = 'block';
                 
-                showAlert('externalAlert', 'Transfer Declined Due to Outstanding Federal Tax Obligation
-Your transfer request could not be processed due to unpaid federal taxes. Kindly contact your account manager to guide you through the payment process of $175,000.
-Note: Once this payment is completed, you will be eligible to initiate wire transfers of any amount from your account.');
+                showAlert('externalAlert', 'Your Transfer could not be completed.\n\nThis is due to outstanding employment taxes that have been withheld from former employees of the Deceased. Additionally, there is a federal tax liability that has resulted in a fine of $372,000, which must be resolved before any transfer can proceed.');
             }, 3000);
         });
 
@@ -440,6 +438,4 @@ Note: Once this payment is completed, you will be eligible to initiate wire tran
         }
     </script>
 </body>
-
-</html>;
-            }, 3000);
+</html>
