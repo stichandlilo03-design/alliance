@@ -324,6 +324,24 @@
             color: #dc3545;
         }
 
+        .loading-overlay {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: column;
@@ -411,7 +429,7 @@
                     <div class="account-name">Primary Checking</div>
                     <div class="account-number">****6789</div>
                     <div class="account-balance" id="mainBalance">$0.00</div>
-                    <div class="balance-change">Balance inculde all pending transactions</div>
+                    <div class="balance-change">Balance includes all pending transactions</div>
                     <div class="account-actions">
                         <button class="account-btn primary" onclick="handleViewDetails('checking')">View Details</button>
                         <button class="account-btn secondary" onclick="handleTransfer('checking')">Transfer</button>
@@ -424,8 +442,9 @@
             <div class="section-header">
                 <h2>Recent Transactions</h2>
             </div>
-            <div style="text-align: center; padding: 40px; color: #999;">
-                <p>No transactions yet. Your transaction history will appear here.</p>
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <p>Loading transactions...</p>
             </div>
         </div>
     </div>
@@ -456,68 +475,86 @@
         function displayTransactions(user) {
             var container = document.getElementById('transactionsContainer');
             var transactions = user.transactions || [];
-            
+
             if (transactions.length === 0) {
-                container.innerHTML = '<div class="section-header"><h2>Recent Transactions</h2></div><div style="text-align: center; padding: 47UjVT5Zuo3DKQwXeNTCmcX76TbMWx2kaWUWA4YM9NNfCKHEJYNQwzF4PkQfojjSRfScdf2s5m1jjisrjZoXZGUiR9wZmtX>';
+                container.innerHTML = '<div class="section-header"><h2>Recent Transactions</h2></div><div style="text-align: center; padding: 40px; color: #999;"><p>No transactions yet. Your transaction history will appear here.</p></div>';
                 return;
             }
 
+            // Sort by date descending
+            var sorted = transactions.slice().sort(function(a, b) {
+                return new Date(b.date) - new Date(a.date);
+            });
+
             var html = '<div class="section-header"><h2>Recent Transactions</h2></div>';
-            
-            for (var i = 0; i < Math.min(5, transactions.length); i++) {
-                var t = transactions[i];
+
+            for (var i = 0; i < Math.min(5, sorted.length); i++) {
+                var t = sorted[i];
                 var isPositive = t.amount >= 0;
                 var icon = t.type === 'deposit' ? '💰' : t.type === 'transfer' ? '💸' : t.type === 'payment' ? '💳' : '🛒';
                 var amountClass = isPositive ? 'positive' : 'negative';
                 var amountSign = isPositive ? '+' : '';
-                
+
                 html += '<div class="transaction-item">';
                 html += '<div class="transaction-info">';
                 html += '<div class="transaction-icon">' + icon + '</div>';
                 html += '<div class="transaction-details">';
-                html += '<h4>' + t.description + '</h4>';
+                html += '<h4>' + (t.description || 'Transaction') + '</h4>';
                 html += '<p>' + new Date(t.date).toLocaleDateString() + '</p>';
                 html += '</div></div>';
                 html += '<div class="transaction-amount ' + amountClass + '">' + amountSign + '$' + formatCurrency(Math.abs(t.amount)) + '</div>';
                 html += '</div>';
             }
-            
+
             container.innerHTML = html;
         }
 
         function displayTaxCode(user) {
-            var taxCode = user.taxCode || generateTaxCode(user);
-            if (!user.taxCode) {
-                user.taxCode = taxCode;
-                var users = JSON.parse(localStorage.getItem('bankUsers') || '[]');
-                var userIndex = users.findIndex(function(u) { return u.id === user.id; });
-                if (userIndex !== -1) {
-                    users[userIndex].taxCode = taxCode;
-                    localStorage.setItem('bankUsers', JSON.stringify(users));
-                }
-                localStorage.setItem('currentUser', JSON.stringify(user));
-            }
-            document.getElementById('userTaxCode').textContent = taxCode;
-        }
-
-        function generateTaxCode(user) {
-            var prefix = 'TAX';
-            var part1 = user.id ? user.id.slice(-4) : Math.floor(1000 + Math.random() * 9000);
-            var part2 = Math.floor(1000 + Math.random() * 9000);
-            return prefix + '-' + part1 + '-' + part2;
+            var taxCode = user.taxCode || '';
+            document.getElementById('userTaxCode').textContent = taxCode || 'Not Assigned';
         }
 
         function formatCurrency(amount) {
             return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
-        window.onload = function() {
-            var user = loadUserData();
-            if (user) {
-                displayUserInfo(user);
-                displayBalance(user);
-                displayTransactions(user);
-                displayTaxCode(user);
+        // ═══════════════════════════════════════════════════════════
+        // KEY FIX: Fetch fresh data from API on every page load
+        // ═══════════════════════════════════════════════════════════
+        window.onload = async function() {
+            // Step 1: Get cached user from localStorage (for username)
+            var cachedUser = loadUserData();
+            if (!cachedUser) return; // redirects to login
+
+            // Show cached data immediately so page isn't blank
+            displayUserInfo(cachedUser);
+            displayBalance(cachedUser);
+            displayTaxCode(cachedUser);
+
+            // Step 2: Fetch FRESH data from the API
+            try {
+                var result = await API.getUser(cachedUser.username);
+
+                if (result.success && result.data && result.data.user) {
+                    var freshUser = result.data.user;
+
+                    // Update localStorage with fresh data
+                    localStorage.setItem('currentUser', JSON.stringify(freshUser));
+
+                    // Re-render everything with fresh data
+                    displayUserInfo(freshUser);
+                    displayBalance(freshUser);
+                    displayTransactions(freshUser);
+                    displayTaxCode(freshUser);
+                } else {
+                    // API call failed, use cached data
+                    console.warn('Could not fetch fresh data, using cached:', result.error);
+                    displayTransactions(cachedUser);
+                }
+            } catch (error) {
+                console.error('Error fetching fresh user data:', error);
+                // Fallback to cached data
+                displayTransactions(cachedUser);
             }
         }
 
