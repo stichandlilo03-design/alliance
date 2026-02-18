@@ -5,13 +5,15 @@
 const getAPIBase = () => {
     const origin = window.location.origin;
 
-    // Vercel deployment: use /api route
-    if (origin.includes('vercel.app') || origin.includes('vercel')) {
-        return origin + '/api';
-    }
+    // Check if api.php exists (cPanel) or use /api (Vercel)
+    // Add your custom domains here OR just always use /api if you're only on Vercel
+    const isVercel =
+        origin.includes('vercel.app') ||
+        origin.includes('vercel') ||
+        origin.includes('alliancefcu.sbs') ||
+        origin.includes('localhost:3000');
 
-    // Local development with Vercel CLI (npx vercel dev)
-    if (origin.includes('localhost:3000')) {
+    if (isVercel) {
         return origin + '/api';
     }
 
